@@ -1,0 +1,7 @@
+--require @babel/register
+--require @babel/polyfill
+--require ./source/DOM-polyfill
+--require should
+--recursive
+--colors
+--inline-diffs

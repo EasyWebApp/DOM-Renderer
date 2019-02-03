@@ -1,0 +1,12 @@
+{
+    "name": "TechQuery",
+    "profile": {
+        "URL": "https://tech-query.me/",
+        "title": "Web/JavaScript full-stack engineer"
+    },
+    "job": [
+        { "title": "freeCodeCamp" },
+        { "title": "MVP" },
+        { "title": "KaiYuanShe" }
+    ]
+}
