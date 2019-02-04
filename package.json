@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Template engine based on HTML 5 & ECMAScript 6",
     "keywords": [
         "template",
@@ -29,7 +29,7 @@
         "lint": "eslint source/ test/ --fix",
         "pack": "amd-bundle source/index dist/dom-renderer -m",
         "build": "npm run format  &&  npm run lint  &&  npm run pack",
-        "debug": "npm run build  &&  mocha --inspect-brk",
+        "debug": "npm run pack  &&  mocha --inspect-brk",
         "test": "npm run build  &&  mocha --exit  &&  esdoc",
         "prepublishOnly": "npm test",
         "help": "esdoc  &&  web-server docs/ -o"
@@ -57,7 +57,9 @@
         "koapache": "^1.0.5",
         "mocha": "^5.2.0",
         "prettier": "^1.15.3",
-        "should": "^13.2.3"
+        "should": "^13.2.3",
+        "should-sinon": "0.0.6",
+        "sinon": "^7.2.3"
     },
     "babel": {
         "presets": [
