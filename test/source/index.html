@@ -1,5 +1,7 @@
 <template>
-    <h1>Hello, ${view.name} !</h1>
+    <h1 hidden="${! view.name}">
+        Hello, ${view.name} !
+    </h1>
 
     <ul data-object="profile">
         <template>
