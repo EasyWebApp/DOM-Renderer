@@ -1,3 +1,13 @@
+/**
+ * @type {Object}
+ */
+export const attributeMap = {
+    class: 'className',
+    for: 'htmlFor',
+    readonly: 'readOnly',
+    value: 'defaultValue'
+};
+
 const HTML_page = /<!?(DocType|html|head|body|meta|title|base)[\s\S]*?>/,
     parser = new DOMParser();
 
@@ -12,6 +22,19 @@ export function parseDOM(markup) {
         : Object.assign(document.createElement('template'), {
             innerHTML: markup
         }).content;
+}
+
+/**
+ * @param {Node[]} list
+ *
+ * @return {String} HTML/XML source code
+ */
+export function stringifyDOM(list) {
+    const box = document.createElement('div');
+
+    box.append.apply(box, Array.from(list, node => node.cloneNode(true)));
+
+    return box.innerHTML;
 }
 
 /**
@@ -56,7 +79,7 @@ export function scanTemplate(
     Array.from(iterator, node => {
         switch (node.nodeType) {
             case 1:
-                Array.from(
+                [].forEach.call(
                     node.attributes,
                     attr => expression.test(attr.value) && attribute(attr)
                 );

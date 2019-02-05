@@ -1,6 +1,6 @@
 --require @babel/register
 --require @babel/polyfill
---require ./source/DOM-polyfill
+--require ./source/polyfill
 --require should
 --require should-sinon
 --recursive

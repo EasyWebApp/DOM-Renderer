@@ -51,6 +51,36 @@ export default class Template extends Array {
     }
 
     /**
+     * @private
+     *
+     * @param {Number}   index
+     * @param {?Object}  context
+     * @param {Object[]} [scope=[]]
+     *
+     * @return {*}
+     */
+    eval(index, context, scope = []) {
+        try {
+            let value = this[index].apply(context, scope);
+
+            if (value != null) {
+                if (Object(value) instanceof String)
+                    try {
+                        value = JSON.parse(value);
+                    } catch (error) {
+                        //
+                    }
+
+                return value;
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+
+        return '';
+    }
+
+    /**
      * @param {?Object}   context - `this` in the expression
      * @param {...Object} [scope] - Scoped varible objects
      *
@@ -58,12 +88,10 @@ export default class Template extends Array {
      */
     evaluate(context, ...scope) {
         var value = this[1]
-            ? this[template_raw].replace(/\$\{(\d+)\}/g, (_, index) => {
-                const value = this[index].apply(context, scope);
-
-                return value != null ? value : '';
-            })
-            : this[0].apply(context, scope);
+            ? this[template_raw].replace(/\$\{(\d+)\}/g, (_, index) =>
+                this.eval(index, context, scope)
+            )
+            : this.eval(0, context, scope);
 
         if (this[template_value] !== value) {
             if (this.onChange) this.onChange(value, this[template_value]);
