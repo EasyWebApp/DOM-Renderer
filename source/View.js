@@ -1,18 +1,27 @@
+import Model from './Model';
+
 import { parseDOM, scanTemplate, stringifyDOM, attributeMap } from './utility';
 
 import Template from './Template';
 
-const forEach = [].forEach;
+const { forEach, push } = Array.prototype;
 
 const view_template = Symbol('View template'),
-    view_top = new Map();
+    view_top = new Map(),
+    view_injection = Symbol('View injection'),
+    view_varible = ['view', 'scope'];
 
-export default class View extends Map {
+export default class View extends Model {
     /**
-     * @param {String} template
+     * @param {String}  template
+     * @param {?Object} scope          - Data of parent View
+     * @param {Object}  [injection={}] - Key for Template varible
      */
-    constructor(template) {
-        super()[view_template] = template + '';
+    constructor(template, scope, injection = {}) {
+        super(scope);
+
+        (this[view_template] = template + ''),
+        (this[view_injection] = injection);
 
         forEach.call(parseDOM(template).childNodes, node => {
             view_top.set(node, this);
@@ -43,17 +52,16 @@ export default class View extends Map {
      * @param {Element} root
      */
     static clear(root) {
-        forEach.call(
-            root.childNodes,
-            node => view_top.delete(node) && node.remove()
-        );
+        Array.from(view_top.keys())
+            .filter(node => root.compareDocumentPosition(node) & 16)
+            .forEach(node => (view_top.delete(node), node.remove()));
     }
 
     /**
      * @return {View}
      */
     clone() {
-        return new View(this[view_template]);
+        return new View(this[view_template], this.scope, this[view_injection]);
     }
 
     /**
@@ -73,59 +81,52 @@ export default class View extends Map {
     }
 
     /**
-     * @private
-     *
-     * @param {String}        type
-     * @param {Element}       element
-     * @param {Template|View} renderer
-     */
-    addNode(type, element, renderer) {
-        this.set({ type, element }, renderer);
-    }
-
-    /**
-     * @private
+     * @protected
      *
      * @param {Element} root
      */
     parseTree(root) {
+        const injection = view_varible.concat(
+            Object.keys(this[view_injection])
+        );
+
         scanTemplate(root, Template.Expression, '[data-view]', {
             attribute: ({ ownerElement, name, value }) => {
                 name = attributeMap[name] || name;
 
-                this.addNode(
-                    'Attr',
-                    ownerElement,
-                    new Template(
+                push.call(this, {
+                    type: 'Attr',
+                    element: ownerElement,
+                    renderer: new Template(
                         value,
-                        ['view'],
+                        injection,
                         name in ownerElement
                             ? value => (ownerElement[name] = value)
                             : value => ownerElement.setAttribute(name, value)
                     )
-                );
+                });
             },
             text: node => {
                 const { parentNode } = node;
 
-                this.addNode(
-                    'Text',
-                    parentNode,
-                    new Template(
+                push.call(this, {
+                    type: 'Text',
+                    element: parentNode,
+                    renderer: new Template(
                         node.nodeValue,
-                        ['view'],
+                        injection,
                         parentNode.firstElementChild
                             ? value => (node.nodeValue = value)
                             : value => (parentNode.innerHTML = value)
                     )
-                );
+                });
             },
             view: node =>
-                this.addNode(
-                    'View',
-                    node,
-                    new View(View.getTemplate(node).trim())
-                )
+                push.call(this, {
+                    type: 'View',
+                    element: node,
+                    renderer: new View(View.getTemplate(node).trim(), this.data)
+                })
         });
     }
 
@@ -135,11 +136,20 @@ export default class View extends Map {
      * @return {View}
      */
     render(data) {
-        this.forEach((renderer, { type, element }) => {
+        data = this.patch(data);
+
+        const injection = [data, this.scope].concat(
+            Object.values(this[view_injection])
+        );
+
+        forEach.call(this, ({ type, element, renderer }) => {
             switch (type) {
                 case 'Attr':
                 case 'Text':
-                    return renderer.evaluate(element, data);
+                    return renderer.evaluate.apply(
+                        renderer,
+                        [element].concat(injection)
+                    );
             }
 
             var _data_ = data[element.dataset.view];

@@ -15,7 +15,7 @@ describe('DOM View', () => {
     it('Parsing', () => {
         view = new View(view);
 
-        Array.from(view.keys(), ({ type }) => type).should.match([
+        Array.from(view, ({ type }) => type).should.match([
             'Attr',
             'Text',
             'View',
@@ -32,10 +32,12 @@ describe('DOM View', () => {
 
     <ul data-view="profile">
         <template>
-            <li>\${view.URL}</li>
+            <li title="\${scope.name}">
+                \${view.URL}
+            </li>
             <li>\${view.title}</li>
         </template>
-    <li>https://tech-query.me/</li>
+    <li title="TechQuery">https://tech-query.me/</li>
             <li>Web/JavaScript full-stack engineer</li></ul>
 
     <ol data-view="job">
@@ -46,29 +48,49 @@ describe('DOM View', () => {
 `);
     });
 
+    function getLasts() {
+        return view.topNodes
+            .map(node => node.nodeType === 1 && node.lastChild)
+            .filter(Boolean);
+    }
+
     /**
-     * @test {View#render}
+     * @test {Model#patch}
      */
     it('Updating', () => {
-        function getLasts() {
-            return view.topNodes
-                .map(node => node.nodeType === 1 && node.lastChild)
-                .filter(Boolean);
-        }
-
         const last = getLasts(),
             _data_ = Object.assign({}, data);
 
         _data_.name = 'tech-query';
-        _data_.profile = null;
-        delete _data_.job;
+        delete _data_.profile;
+        _data_.job = null;
 
         view.render(_data_);
 
         const now = getLasts();
 
         now[0].should.not.be.equal(last[0]);
-        now[1].nodeName.should.not.be.equal('LI');
-        now[2].should.be.equal(last[2]);
+        now[1].should.be.equal(last[1]);
+        now[2].nodeName.should.not.be.equal('LI');
+
+        (view + '').should.be.equal(`
+    <h1>tech-query</h1>
+
+    <ul data-view="profile">
+        <template>
+            <li title="\${scope.name}">
+                \${view.URL}
+            </li>
+            <li>\${view.title}</li>
+        </template>
+    <li title="TechQuery">https://tech-query.me/</li>
+            <li>Web/JavaScript full-stack engineer</li></ul>
+
+    <ol data-view="job">
+        <template>
+            <li>\${view.title}</li>
+        </template>
+    </ol>
+`);
     });
 });
