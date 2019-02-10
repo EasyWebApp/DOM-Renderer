@@ -1,15 +1,24 @@
 import Model from './Model';
 
-import { parseDOM, scanTemplate, stringifyDOM, attributeMap } from './utility';
+import {
+    parseDOM,
+    scanTemplate,
+    stringifyDOM,
+    attributeMap,
+    nextTick
+} from './utility';
 
 import Template from './Template';
 
 const { forEach, push } = Array.prototype;
 
+const iterator = [][Symbol.iterator];
+
 const view_template = Symbol('View template'),
-    view_top = new Map(),
+    view_top = new WeakMap(),
     view_injection = Symbol('View injection'),
-    view_varible = ['view', 'scope'];
+    view_varible = ['view', 'scope'],
+    element_view = new WeakMap();
 
 export default class View extends Model {
     /**
@@ -23,22 +32,28 @@ export default class View extends Model {
         (this[view_template] = template + ''),
         (this[view_injection] = injection);
 
+        const top = [];
+
+        view_top.set(this, top);
+
         forEach.call(parseDOM(template).childNodes, node => {
-            view_top.set(node, this);
+            top.push(node);
 
             if (node.nodeType === 1) this.parseTree(node);
         });
+
+        Object.freeze(top);
+    }
+
+    [Symbol.iterator]() {
+        return iterator.call(this);
     }
 
     /**
      * @type {Node[]}
      */
     get topNodes() {
-        const list = [];
-
-        view_top.forEach((view, node) => view === this && list.push(node));
-
-        return list;
+        return view_top.get(this);
     }
 
     /**
@@ -46,15 +61,6 @@ export default class View extends Model {
      */
     toString() {
         return stringifyDOM(this.topNodes);
-    }
-
-    /**
-     * @param {Element} root
-     */
-    static clear(root) {
-        Array.from(view_top.keys())
-            .filter(node => root.compareDocumentPosition(node) & 16)
-            .forEach(node => (view_top.delete(node), node.remove()));
     }
 
     /**
@@ -83,6 +89,31 @@ export default class View extends Model {
     /**
      * @protected
      *
+     * @param {String}        type
+     * @param {Element}       element
+     * @param {Template|View} renderer
+     */
+    addNode(type, element, renderer) {
+        const name = element.dataset.view;
+
+        push.call(this, { type, element, renderer, name });
+
+        if (type !== 'View') return;
+
+        const sub_view = [];
+
+        element_view.set(element, sub_view);
+
+        if (!(name in this))
+            Object.defineProperty(this, name, {
+                get: () => (sub_view[1] ? sub_view : sub_view[0]),
+                enumerable: true
+            });
+    }
+
+    /**
+     * @protected
+     *
      * @param {Element} root
      */
     parseTree(root) {
@@ -94,39 +125,39 @@ export default class View extends Model {
             attribute: ({ ownerElement, name, value }) => {
                 name = attributeMap[name] || name;
 
-                push.call(this, {
-                    type: 'Attr',
-                    element: ownerElement,
-                    renderer: new Template(
+                this.addNode(
+                    'Attr',
+                    ownerElement,
+                    new Template(
                         value,
                         injection,
                         name in ownerElement
                             ? value => (ownerElement[name] = value)
                             : value => ownerElement.setAttribute(name, value)
                     )
-                });
+                );
             },
             text: node => {
                 const { parentNode } = node;
 
-                push.call(this, {
-                    type: 'Text',
-                    element: parentNode,
-                    renderer: new Template(
+                this.addNode(
+                    'Text',
+                    parentNode,
+                    new Template(
                         node.nodeValue,
                         injection,
                         parentNode.firstElementChild
                             ? value => (node.nodeValue = value)
                             : value => (parentNode.innerHTML = value)
                     )
-                });
+                );
             },
             view: node =>
-                push.call(this, {
-                    type: 'View',
-                    element: node,
-                    renderer: new View(View.getTemplate(node).trim(), this.data)
-                })
+                this.addNode(
+                    'View',
+                    node,
+                    new View(View.getTemplate(node).trim(), this.data)
+                )
         });
     }
 
@@ -135,7 +166,7 @@ export default class View extends Model {
      *
      * @return {View}
      */
-    render(data) {
+    async render(data) {
         data = this.patch(data);
 
         const injection = [data, this.scope].concat(
@@ -143,34 +174,55 @@ export default class View extends Model {
         );
 
         forEach.call(this, ({ type, element, renderer }) => {
-            switch (type) {
-                case 'Attr':
-                case 'Text':
-                    return renderer.evaluate.apply(
-                        renderer,
-                        [element].concat(injection)
-                    );
-            }
-
-            var _data_ = data[element.dataset.view];
-
-            if (!_data_ && _data_ !== null) return;
-
-            View.clear(element);
-
-            if (!_data_) return;
-
-            if (!(_data_ instanceof Array)) _data_ = [_data_];
-
-            element.append.apply(
-                element,
-                [].concat.apply(
-                    [],
-                    _data_.map(item => renderer.clone().render(item).topNodes)
-                )
-            );
+            if (type !== 'View')
+                renderer.evaluate.apply(renderer, [element].concat(injection));
         });
 
-        return this;
+        for (let { type, element, renderer, name } of this)
+            if (type === 'View') {
+                await nextTick();
+
+                await this.renderSub(data[name], element, renderer);
+            }
+    }
+
+    destroy() {
+        view_top.get(this).forEach(node => node.remove());
+
+        view_top.delete(this);
+    }
+
+    /**
+     * @protected
+     *
+     * @param {Object}  data
+     * @param {Element} element
+     * @param {View}    renderer
+     */
+    async renderSub(data, element, renderer) {
+        if (!data && data !== null) return;
+
+        const sub = element_view.get(element);
+
+        if (!data) {
+            sub.forEach(view => view.destroy());
+
+            return (sub.length = 0);
+        }
+
+        if (!(data instanceof Array)) data = [data];
+
+        sub.splice(data.length, Infinity).forEach(view => view.destroy());
+
+        for (let i = 0; data[i]; i++) {
+            sub[i] = sub[i] || renderer.clone();
+
+            await sub[i].render(data[i]);
+        }
+
+        element.append.apply(
+            element,
+            [].concat.apply([], sub.map(view => view.topNodes))
+        );
     }
 }

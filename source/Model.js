@@ -29,6 +29,19 @@ export default class Model {
     }
 
     /**
+     * @return {Object}
+     */
+    valueOf() {
+        const { data } = this,
+            value = {};
+
+        for (let key in data)
+            if (data.hasOwnProperty(key)) value[key] = data[key];
+
+        return value;
+    }
+
+    /**
      * @param {Object} data
      *
      * @return {Object}

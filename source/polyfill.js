@@ -7,5 +7,11 @@ const { window } = new JSDOM('', {
     pretendToBeVisual: true
 });
 
-for (let key of ['document', 'DocumentFragment', 'DOMParser', 'NodeFilter'])
+for (let key of [
+    'self',
+    'document',
+    'DocumentFragment',
+    'DOMParser',
+    'NodeFilter'
+])
     global[key] = window[key];

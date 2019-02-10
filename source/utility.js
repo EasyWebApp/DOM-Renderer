@@ -89,3 +89,10 @@ export function scanTemplate(
         }
     });
 }
+
+/**
+ * @return {Promise<Number>} https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp
+ */
+export function nextTick() {
+    return new Promise(resolve => self.requestAnimationFrame(resolve));
+}

@@ -11,6 +11,7 @@ var view = parseDOM(readFileSync('test/source/index.html')).firstElementChild
 describe('DOM View', () => {
     /**
      * @test {View#parseTree}
+     * @test {View#addNode}
      */
     it('Parsing', () => {
         view = new View(view);
@@ -21,13 +22,23 @@ describe('DOM View', () => {
             'View',
             'View'
         ]);
+
+        view.should.have.properties('profile', 'job');
     });
 
     /**
      * @test {View#render}
+     * @test {View#renderSub}
      */
-    it('Rendering', () => {
-        (view.render(data) + '').should.be.equal(`
+    it('Rendering', async () => {
+        await view.render(data);
+
+        view.profile.should.be.instanceOf(View);
+
+        view.job.should.have.length(3);
+        view.job[0].should.be.instanceOf(View);
+
+        (view + '').should.be.equal(`
     <h1>TechQuery</h1>
 
     <ul data-view="profile">
@@ -57,7 +68,7 @@ describe('DOM View', () => {
     /**
      * @test {Model#patch}
      */
-    it('Updating', () => {
+    it('Updating', async () => {
         const last = getLasts(),
             _data_ = Object.assign({}, data);
 
@@ -65,7 +76,7 @@ describe('DOM View', () => {
         delete _data_.profile;
         _data_.job = null;
 
-        view.render(_data_);
+        await view.render(_data_);
 
         const now = getLasts();
 
