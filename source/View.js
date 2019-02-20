@@ -15,7 +15,7 @@ const { forEach, push } = Array.prototype;
 const iterator = [][Symbol.iterator];
 
 const view_template = Symbol('View template'),
-    view_top = new WeakMap(),
+    view_top = new Map(),
     view_injection = Symbol('View injection'),
     view_varible = ['view', 'scope'],
     element_view = new WeakMap();
@@ -27,7 +27,7 @@ export default class View extends Model {
      * @param {Object}  [injection={}] - Key for Template varible
      */
     constructor(template, scope, injection = {}) {
-        super(scope);
+        super(scope, 'render');
 
         (this[view_template] = template + ''),
         (this[view_injection] = injection);
@@ -47,6 +47,21 @@ export default class View extends Model {
 
     [Symbol.iterator]() {
         return iterator.call(this);
+    }
+
+    /**
+     * @param {Node} node
+     *
+     * @return {?View}
+     */
+    static instanceOf(node) {
+        const map = Array.from(view_top.entries());
+
+        do {
+            const view = map.find(([view, top]) => top.includes(node) && view);
+
+            if (view) return view[0];
+        } while ((node = node.parentNode));
     }
 
     /**

@@ -1,0 +1,31 @@
+{
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "targets": {
+                    "node": "6.3.0"
+                }
+            }
+        ]
+    ],
+    "plugins": [
+        [
+            "babel-plugin-inline-import",
+            {
+                "extensions": [
+                    ".html",
+                    ".css",
+                    ".json"
+                ]
+            }
+        ]
+    ],
+    "env": {
+        "pack": {
+            "presets": [
+                "@babel/preset-env"
+            ]
+        }
+    }
+}

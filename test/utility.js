@@ -1,5 +1,3 @@
-import { readFileSync } from 'fs-extra';
-
 import {
     parseDOM,
     walkDOM,
@@ -9,8 +7,9 @@ import {
 
 import Template from '../source/Template';
 
-var template = readFileSync('test/source/index.html') + '',
-    fragment;
+import template from './source/index.html';
+
+var fragment;
 
 describe('DOM utility', () => {
     /**

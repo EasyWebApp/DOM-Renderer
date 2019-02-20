@@ -5,6 +5,9 @@ import Template from '../source/Template';
 var onChange = spy(),
     template;
 
+/**
+ * @test {Template}
+ */
 describe('Template evaluator', () => {
     /**
      * @test {Template#evaluatorOf}

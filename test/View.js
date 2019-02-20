@@ -1,13 +1,16 @@
-import { readFileSync, readJSONSync } from 'fs-extra';
-
 import { parseDOM } from '../source/utility';
 
 import View from '../source/View';
 
-var view = parseDOM(readFileSync('test/source/index.html')).firstElementChild
-        .innerHTML,
-    data = readJSONSync('test/source/index.json');
+import template from './source/index.html';
 
+import data from './source/index.json';
+
+var view = parseDOM(template).firstElementChild.innerHTML;
+
+/**
+ * @test {View}
+ */
 describe('DOM View', () => {
     /**
      * @test {View#parseTree}
@@ -28,10 +31,9 @@ describe('DOM View', () => {
 
     /**
      * @test {View#render}
-     * @test {View#renderSub}
      */
     it('Rendering', async () => {
-        await view.render(data);
+        await view.render(JSON.parse(data));
 
         view.profile.should.be.instanceOf(View);
 
@@ -59,18 +61,27 @@ describe('DOM View', () => {
 `);
     });
 
-    function getLasts() {
+    function getFirsts() {
         return view.topNodes
-            .map(node => node.nodeType === 1 && node.lastChild)
+            .map(node => {
+                if (node.nodeType === 1)
+                    return [].find.call(
+                        node.childNodes,
+                        ({ innerHTML, tagName, nodeValue }) =>
+                            innerHTML
+                                ? tagName !== 'TEMPLATE'
+                                : nodeValue.trim()
+                    );
+            })
             .filter(Boolean);
     }
 
     /**
-     * @test {Model#patch}
+     * @test {View#renderSub}
      */
     it('Updating', async () => {
-        const last = getLasts(),
-            _data_ = Object.assign({}, data);
+        const first = getFirsts(),
+            _data_ = JSON.parse(data);
 
         _data_.name = 'tech-query';
         delete _data_.profile;
@@ -78,11 +89,11 @@ describe('DOM View', () => {
 
         await view.render(_data_);
 
-        const now = getLasts();
+        const now = getFirsts();
 
-        now[0].should.not.be.equal(last[0]);
-        now[1].should.be.equal(last[1]);
-        now[2].nodeName.should.not.be.equal('LI');
+        now[0].should.not.be.equal(first[0]);
+        now[1].should.be.equal(first[1]);
+        now.should.have.length(2);
 
         (view + '').should.be.equal(`
     <h1>tech-query</h1>
@@ -103,5 +114,31 @@ describe('DOM View', () => {
         </template>
     </ol>
 `);
+    });
+
+    /**
+     * @test {View#renderSub}
+     * @test {Model#commit}
+     */
+    it('Sub view reusing', async () => {
+        const _data_ = JSON.parse(data);
+
+        await view.render(_data_);
+
+        const first = getFirsts();
+
+        _data_.job.unshift({ title: 'FYClub' });
+
+        await view.commit('job', _data_.job);
+
+        getFirsts().should.match(first);
+        (view.job[0] + '').should.be.equal('<li>FYClub</li>');
+    });
+
+    /**
+     * @test {View.instanceOf}
+     */
+    it('Get the View of a Node', () => {
+        View.instanceOf(getFirsts()[2].firstChild).should.be.equal(view.job[0]);
     });
 });
