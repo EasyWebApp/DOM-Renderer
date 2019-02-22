@@ -36,7 +36,9 @@ export default class View extends Model {
 
         view_top.set(this, top);
 
-        forEach.call(parseDOM(template).childNodes, node => {
+        Array.from(parseDOM(template).childNodes).forEach(node => {
+            node.remove();
+
             top.push(node);
 
             if (node.nodeType === 1) this.parseTree(node);
@@ -113,17 +115,21 @@ export default class View extends Model {
 
         push.call(this, { type, element, renderer, name });
 
-        if (type !== 'View') return;
+        if (type !== 'View') {
+            [].concat
+                .apply([], view_varible.map(name => renderer.keysOf(name)))
+                .forEach(name => this.watch(name));
+
+            return;
+        }
 
         const sub_view = [];
 
         element_view.set(element, sub_view);
 
-        if (!(name in this))
-            Object.defineProperty(this, name, {
-                get: () => (sub_view[1] ? sub_view : sub_view[0]),
-                enumerable: true
-            });
+        this.watch(name, {
+            get: () => (sub_view[1] ? sub_view : sub_view[0])
+        });
     }
 
     /**
@@ -177,11 +183,32 @@ export default class View extends Model {
     }
 
     /**
+     * @type {?Element}
+     */
+    get root() {
+        return this.topNodes[0].parentNode;
+    }
+
+    /**
      * @param {Object} data
      *
      * @return {View}
      */
     async render(data) {
+        const { root } = this;
+
+        if (
+            root &&
+            !root.dispatchEvent(
+                new CustomEvent('render', {
+                    bubbles: true,
+                    cancelable: true,
+                    detail: { view: this, oldData: this.data, newData: data }
+                })
+            )
+        )
+            return;
+
         data = this.patch(data);
 
         const injection = [data, this.scope].concat(
@@ -197,8 +224,16 @@ export default class View extends Model {
             if (type === 'View') {
                 await nextTick();
 
-                await this.renderSub(data[name], element, renderer);
+                await this.renderSub(data[name], name, element, renderer);
             }
+
+        if (root)
+            root.dispatchEvent(
+                new CustomEvent('rendered', {
+                    bubbles: true,
+                    detail: { view: this, data: this.data }
+                })
+            );
     }
 
     destroy() {
@@ -211,33 +246,34 @@ export default class View extends Model {
      * @protected
      *
      * @param {Object}  data
+     * @param {String}  name
      * @param {Element} element
      * @param {View}    renderer
      */
-    async renderSub(data, element, renderer) {
+    async renderSub(data, name, element, renderer) {
         if (!data && data !== null) return;
 
-        const sub = element_view.get(element);
+        const sub = element_view.get(element),
+            isArray = data instanceof Array,
+            _data_ = this.data;
 
-        if (!data) {
-            sub.forEach(view => view.destroy());
-
-            return (sub.length = 0);
-        }
-
-        if (!(data instanceof Array)) data = [data];
+        data = isArray ? Array.from(data) : data ? [data] : [];
 
         sub.splice(data.length, Infinity).forEach(view => view.destroy());
 
         for (let i = 0; data[i]; i++) {
             sub[i] = sub[i] || renderer.clone();
 
+            if (isArray) _data_[name][i] = sub[i].data;
+            else _data_[name] = sub[i].data;
+
             await sub[i].render(data[i]);
         }
 
-        element.append.apply(
-            element,
-            [].concat.apply([], sub.map(view => view.topNodes))
-        );
+        if (data[0])
+            element.append.apply(
+                element,
+                [].concat.apply([], sub.map(view => view.topNodes))
+            );
     }
 }

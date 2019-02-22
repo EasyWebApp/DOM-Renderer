@@ -10,7 +10,7 @@
 
 ## Data binding
 
-[`index.json`](https://github.com/EasyWebApp/DOM-Renderer/blob/master/test/source/index.json)
+[`source/index.json`](https://github.com/EasyWebApp/DOM-Renderer/blob/master/test/source/index.json)
 
 ```JSON
 {
@@ -27,7 +27,7 @@
 }
 ```
 
-[`index.html`](https://github.com/EasyWebApp/DOM-Renderer/blob/master/test/source/index.html)
+[`source/index.html`](https://github.com/EasyWebApp/DOM-Renderer/blob/master/test/source/index.html)
 
 ```HTML
 <template>
@@ -52,15 +52,15 @@
 </template>
 ```
 
-`index.js`
+`source/index.js`
 
 ```JavaScript
-import View from 'dom-renderer';
+import View, { parseDOM } from 'dom-renderer';
 
 import template from './index.html';
 import data from './index.json';
 
-const view = new View( template );
+const view = new View( parseDOM( template ).firstChild.innerHTML );
 
 view.render( data ).then(() => console.log(view + ''));
 ```
@@ -68,7 +68,7 @@ view.render( data ).then(() => console.log(view + ''));
 **Console output** (formatted)
 
 ```HTML
-<h1>TechQuery</h1>
+<h1>Hello, TechQuery !</h1>
 
 <ul data-view="profile">
     <template>
@@ -112,36 +112,47 @@ import 'dom-renderer/dist/polyfill';
 import View from 'dom-renderer';
 ```
 
-## Babel configuration
+## Compile & bundle
 
 ```Shell
 npm install -D \
-    @babel/cli \
-    @babel/core \
+    web-cell \
     @babel/preset-env \
     babel-plugin-inline-import
 ```
 
-`.babelrc`
+`package.json`
 
 ```JSON
 {
-    "presets": [
-        "@babel/preset-env"
-    ],
-    "plugins": [
-        [
-            "babel-plugin-inline-import",
-            {
-                "extensions": [
-                    ".html",
-                    ".css",
-                    ".json"
-                ]
-            }
+    "directories": {
+        "lib": "source/"
+    },
+    "scripts": {
+        "build": "web-cell pack"
+    },
+    "babel": {
+        "presets": [
+            "@babel/preset-env"
+        ],
+        "plugins": [
+            [
+                "babel-plugin-inline-import",
+                {
+                    "extensions": [
+                        ".html",
+                        ".css",
+                        ".json"
+                    ]
+                }
+            ]
         ]
-    ]
+    }
 }
+```
+
+```Shell
+npm run build
 ```
 
 ## Advanced usage
@@ -181,7 +192,7 @@ view.name = 'tech-query';
 
 nextTick().then(() => {
 
-    console.log( document.querySelector('h1').textContent );  // 'tech-query'
+    console.log( document.querySelector('h1').textContent );  // 'Hello, tech-query !'
 });
 ```
 

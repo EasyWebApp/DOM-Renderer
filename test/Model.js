@@ -45,9 +45,12 @@ describe('Data model', () => {
     });
 
     /**
+     * @test {Model#watch}
      * @test {Model#commit}
      */
     it('Async update', async () => {
+        ['test', 'example', 'sample'].forEach(key => model.watch(key));
+
         model.commit('test', 2);
         model.example = 3;
 

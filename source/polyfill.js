@@ -10,8 +10,12 @@ const { window } = new JSDOM('', {
 for (let key of [
     'self',
     'document',
+    'Node',
+    'HTMLElement',
     'DocumentFragment',
     'DOMParser',
-    'NodeFilter'
+    'XMLSerializer',
+    'NodeFilter',
+    'CustomEvent'
 ])
     global[key] = window[key];

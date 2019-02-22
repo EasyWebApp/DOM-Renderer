@@ -1,5 +1,6 @@
 const template_raw = Symbol('Template raw'),
     template_scope = Symbol('Template scope'),
+    scope_key = new WeakMap(),
     template_value = Symbol('Template value');
 
 export default class Template extends Array {
@@ -15,6 +16,8 @@ export default class Template extends Array {
             [template_value]: null,
             onChange: onChange instanceof Function && onChange
         });
+
+        scope_key.set(this, {});
 
         this.parse(), this.reset();
     }
@@ -45,9 +48,35 @@ export default class Template extends Array {
     parse() {
         this[template_raw] = this[template_raw].replace(
             Template.Expression,
-            (_, expression) =>
-                '${' + (this.push(this.evaluatorOf(expression)) - 1) + '}'
+            (_, expression) => {
+                expression.replace(Template.Reference, (_, scope, key) => {
+                    if (
+                        scope !== 'this' &&
+                        !this[template_scope].includes(scope)
+                    )
+                        return;
+
+                    const map = scope_key.get(this);
+
+                    (map[scope] = map[scope] || []).push(key);
+                });
+
+                return (
+                    '${' + (this.push(this.evaluatorOf(expression)) - 1) + '}'
+                );
+            }
         );
+    }
+
+    /**
+     * @param {String} scope - Name of a Scoped varible
+     *
+     * @return {String[]} Reference keys
+     */
+    keysOf(scope) {
+        const map = scope_key.get(this);
+
+        return scope ? map[scope] : [].concat.apply([], Object.values(map));
     }
 
     /**
@@ -87,11 +116,12 @@ export default class Template extends Array {
      * @return {*}
      */
     evaluate(context, ...scope) {
-        var value = this[1]
-            ? this[template_raw].replace(/\$\{(\d+)\}/g, (_, index) =>
-                this.eval(index, context, scope)
-            )
-            : this.eval(0, context, scope);
+        var value =
+            this[template_raw] !== '${0}'
+                ? this[template_raw].replace(/\$\{(\d+)\}/g, (_, index) =>
+                    this.eval(index, context, scope)
+                )
+                : this.eval(0, context, scope);
 
         if (this[template_value] !== value) {
             if (this.onChange) this.onChange(value, this[template_value]);
@@ -114,3 +144,5 @@ export default class Template extends Array {
 }
 
 Template.Expression = /\$\{([^}]+)\}/g;
+
+Template.Reference = /(\w+)(?:\.|\[['"])([^'"]+)/g;

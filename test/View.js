@@ -36,12 +36,16 @@ describe('DOM View', () => {
         await view.render(JSON.parse(data));
 
         view.profile.should.be.instanceOf(View);
+        view.profile.data.should.be.equal(view.data.profile);
 
         view.job.should.have.length(3);
         view.job[0].should.be.instanceOf(View);
+        view.job[0].data.should.be.equal(view.data.job[0]);
 
         (view + '').should.be.equal(`
-    <h1>TechQuery</h1>
+    <h1>
+        Hello, TechQuery !
+    </h1>
 
     <ul data-view="profile">
         <template>
@@ -50,7 +54,9 @@ describe('DOM View', () => {
             </li>
             <li>\${view.title}</li>
         </template>
-    <li title="TechQuery">https://tech-query.me/</li>
+    <li title="TechQuery">
+                https://tech-query.me/
+            </li>
             <li>Web/JavaScript full-stack engineer</li></ul>
 
     <ol data-view="job">
@@ -96,7 +102,9 @@ describe('DOM View', () => {
         now.should.have.length(2);
 
         (view + '').should.be.equal(`
-    <h1>tech-query</h1>
+    <h1>
+        Hello, tech-query !
+    </h1>
 
     <ul data-view="profile">
         <template>
@@ -105,7 +113,9 @@ describe('DOM View', () => {
             </li>
             <li>\${view.title}</li>
         </template>
-    <li title="TechQuery">https://tech-query.me/</li>
+    <li title="TechQuery">
+                https://tech-query.me/
+            </li>
             <li>Web/JavaScript full-stack engineer</li></ul>
 
     <ol data-view="job">

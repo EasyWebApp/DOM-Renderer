@@ -11,6 +11,7 @@ var onChange = spy(),
 describe('Template evaluator', () => {
     /**
      * @test {Template#evaluatorOf}
+     * @test {Template#keysOf}
      */
     it('Parsing', () => {
         template = new Template(
@@ -22,6 +23,8 @@ describe('Template evaluator', () => {
         template.should.have.length(2);
 
         template[0].should.be.instanceOf(Function);
+
+        template.keysOf().should.be.eql(['test', 'example']);
 
         onChange.should.be.calledWith('test,example', null);
     });

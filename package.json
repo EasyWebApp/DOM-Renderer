@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Template engine based on HTML 5 & ECMAScript 6",
     "keywords": [
         "template",
@@ -19,6 +19,7 @@
         "url": "https://github.com/EasyWebApp/DOM-Renderer/issues"
     },
     "module": "source/index.js",
+    "main": "dist/dom-renderer.js",
     "browser": "dist/dom-renderer.min.js",
     "directories": {
         "lib": "source",
@@ -56,7 +57,7 @@
         "husky": "^1.3.1",
         "jsdom": "^13.2.0",
         "koapache": "^1.0.5",
-        "mocha": "^6.0.0",
+        "mocha": "^6.0.1",
         "prettier": "^1.16.4",
         "should": "^13.2.3",
         "should-sinon": "0.0.6",

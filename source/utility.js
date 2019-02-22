@@ -24,12 +24,39 @@ export function parseDOM(markup) {
         }).content;
 }
 
+const Document_Level = ['#document', 'html', 'head', 'body'],
+    serializer = new XMLSerializer(),
+    documentXML = document.implementation.createDocument(null, 'xml');
+
+function stringOf(node) {
+    if (node.querySelectorAll)
+        Array.from(
+            node.querySelectorAll('style:not(:empty), script:not(:empty)'),
+            ({ textContent, firstChild }) =>
+                textContent.trim() &&
+                firstChild.replaceWith(
+                    documentXML.createCDATASection(textContent)
+                )
+        );
+
+    return serializer.serializeToString(node);
+}
+
 /**
- * @param {Node[]} list
+ * @param {Node|Node[]} list
  *
  * @return {String} HTML/XML source code
  */
 export function stringifyDOM(list) {
+    if (list instanceof HTMLElement) return list.outerHTML;
+
+    if (list instanceof Node) {
+        if (Document_Level.includes(list.nodeName.toLowerCase()))
+            return stringOf(list);
+
+        list = [list];
+    }
+
     const box = document.createElement('div');
 
     box.append.apply(box, Array.from(list, node => node.cloneNode(true)));

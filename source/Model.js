@@ -41,9 +41,39 @@ export default class Model {
             value = {};
 
         for (let key in data)
-            if (data.hasOwnProperty(key)) value[key] = data[key];
+            if (data.hasOwnProperty(key)) {
+                let _data_ = data[key];
+
+                value[key] =
+                    _data_ instanceof Object ? _data_.valueOf() : _data_;
+            }
 
         return value;
+    }
+
+    /**
+     * @param {String} key          - Property name of `this`
+     * @param {Object} [descriptor] - More configuration of `key`
+     */
+    watch(key, descriptor) {
+        const meta = Object.assign(
+            Object.getOwnPropertyDescriptor(this, key) || {},
+            descriptor
+        );
+
+        (meta.configurable = true), (meta.enumerable = true);
+
+        if (!meta.get)
+            meta.get = function() {
+                return this.data[key];
+            };
+
+        if (!meta.set)
+            meta.set = function(value) {
+                this.commit(key, value);
+            };
+
+        Object.defineProperty(this, key, meta);
     }
 
     /**
@@ -58,21 +88,10 @@ export default class Model {
         Object.assign(_data_, data);
 
         for (let key in _data_) {
-            if (!_data_.hasOwnProperty(key)) continue;
-
-            if (!(key in this))
-                Object.defineProperty(this, key, {
-                    get: function() {
-                        return this.data[key];
-                    },
-                    set: function(value) {
-                        this.commit(key, value);
-                    }
-                });
-
             if (
-                typeof data[key] === 'object' ||
-                typeof _data_[key] !== 'object'
+                _data_.hasOwnProperty(key) &&
+                (typeof data[key] === 'object' ||
+                    typeof _data_[key] !== 'object')
             )
                 update[key] = _data_[key];
         }
