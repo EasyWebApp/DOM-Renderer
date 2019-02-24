@@ -1,6 +1,6 @@
 # DOM Renderer
 
-**Template engine** based on **HTML 5** & **ECMAScript 6**
+**Template engine** based on **HTML 5**, **ECMAScript 6** & **MVVM**
 
 [![NPM Dependency](https://david-dm.org/EasyWebApp/DOM-Renderer.svg)](https://david-dm.org/EasyWebApp/DOM-Renderer)
 [![Build Status](https://travis-ci.com/EasyWebApp/DOM-Renderer.svg?branch=master)](https://travis-ci.com/EasyWebApp/DOM-Renderer)
@@ -27,7 +27,7 @@
 }
 ```
 
-[`source/index.html`](https://github.com/EasyWebApp/DOM-Renderer/blob/master/test/source/index.html)
+`source/index.html` [**Template syntax**](https://web-cell/DOM-Renderer/manual/Template.html)
 
 ```HTML
 <template>
@@ -49,6 +49,8 @@
             <li>${view.title}</li>
         </template>
     </ol>
+
+    <input type="text" name="name" placeholder="Switch account">
 </template>
 ```
 
@@ -60,7 +62,7 @@ import View, { parseDOM } from 'dom-renderer';
 import template from './index.html';
 import data from './index.json';
 
-const view = new View( parseDOM( template ).firstChild.innerHTML );
+const view = new View( View.getTemplate( parseDOM( template ) ) );
 
 view.render( data ).then(() => console.log(view + ''));
 ```
@@ -89,6 +91,8 @@ view.render( data ).then(() => console.log(view + ''));
     <li>MVP</li>
     <li>KaiYuanShe</li>
 </ol>
+
+<input type="text" name="name" placeholder="Switch account">
 ```
 
 ## Installation
@@ -115,10 +119,7 @@ import View from 'dom-renderer';
 ## Compile & bundle
 
 ```Shell
-npm install -D \
-    web-cell \
-    @babel/preset-env \
-    babel-plugin-inline-import
+npm install web-cell-cli @babel/preset-env -D
 ```
 
 `package.json`
@@ -134,18 +135,6 @@ npm install -D \
     "babel": {
         "presets": [
             "@babel/preset-env"
-        ],
-        "plugins": [
-            [
-                "babel-plugin-inline-import",
-                {
-                    "extensions": [
-                        ".html",
-                        ".css",
-                        ".json"
-                    ]
-                }
-            ]
         ]
     }
 }
@@ -198,4 +187,4 @@ nextTick().then(() => {
 
 ## Typical cases
 
-https://www.npmjs.com/browse/depended/dom-renderer
+1.  [WebCell](https://web-cell.tk/)

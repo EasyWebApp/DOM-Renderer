@@ -14,6 +14,9 @@
                     "source": "./test",
                     "interfaces": ["describe", "it"],
                     "includes": ["\\.js$"]
+                },
+                "manual": {
+                    "files": ["./manual/Template.md"]
                 }
             }
         },
