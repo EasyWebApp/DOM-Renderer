@@ -5,12 +5,15 @@ import {
     scanTemplate,
     stringifyDOM,
     attributeMap,
-    nextTick
-} from './utility';
+    nextTick,
+    valueOf
+} from '../DOM/utility';
+
+import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
 
 import Template from './Template';
 
-const { forEach, push } = Array.prototype;
+const { forEach, push, concat } = Array.prototype;
 
 const iterator = [][Symbol.iterator];
 
@@ -18,7 +21,8 @@ const view_template = Symbol('View template'),
     view_top = new Map(),
     view_injection = Symbol('View injection'),
     view_varible = ['view', 'scope'],
-    element_view = new WeakMap();
+    element_view = new WeakMap(),
+    top_input = new WeakMap();
 
 export default class View extends Model {
     /**
@@ -57,12 +61,9 @@ export default class View extends Model {
      * @return {?View}
      */
     static instanceOf(node) {
-        const map = Array.from(view_top.entries());
-
         do {
-            const view = map.find(([view, top]) => top.includes(node) && view);
-
-            if (view) return view[0];
+            for (let [view, top] of view_top)
+                if (top.includes(node)) return view;
         } while ((node = node.parentNode));
     }
 
@@ -106,18 +107,18 @@ export default class View extends Model {
     /**
      * @protected
      *
-     * @param {String}        type
-     * @param {Element}       element
-     * @param {Template|View} renderer
+     * @param {String}          type
+     * @param {Element}         element
+     * @param {Template|String} template
      */
-    addNode(type, element, renderer) {
+    addNode(type, element, template) {
         const name = element.dataset.view;
 
-        push.call(this, { type, element, renderer, name });
+        push.call(this, { type, element, template, name });
 
         if (type !== 'View') {
-            [].concat
-                .apply([], view_varible.map(name => renderer.keysOf(name)))
+            concat
+                .apply([], view_varible.map(name => template.keysOf(name)))
                 .forEach(name => this.watch(name));
 
             return;
@@ -133,6 +134,50 @@ export default class View extends Model {
     }
 
     /**
+     * @param {Element} input
+     *
+     * @listens {Event}            - `change` event
+     * @listens {CustomInputEvent}
+     */
+    listen(input) {
+        const top = this.topNodes.find(
+                node =>
+                    node === input || node.compareDocumentPosition(input) & 16
+            ),
+            update = ({ target }) => {
+                if (View.instanceOf(target) === this)
+                    this.commit(target.name, valueOf(target));
+            };
+
+        var list = top_input.get(top);
+
+        if (!list) {
+            top_input.set(top, (list = []));
+
+            top.addEventListener('change', update);
+
+            top.addEventListener(
+                'input',
+                event => event instanceof CustomInputEvent && update(event)
+            );
+
+            watchInput(top);
+        }
+
+        list.push(input.name);
+    }
+
+    /**
+     * @type {String[]}
+     */
+    get listenKeys() {
+        return concat.apply(
+            [],
+            this.topNodes.map(node => top_input.get(node)).filter(Boolean)
+        );
+    }
+
+    /**
      * @protected
      *
      * @param {Element} root
@@ -142,20 +187,23 @@ export default class View extends Model {
             Object.keys(this[view_injection])
         );
 
-        scanTemplate(root, Template.Expression, '[data-view]', {
+        scanTemplate(root, Template.Expression, {
             attribute: ({ ownerElement, name, value }) => {
+                var onChange;
+
                 name = attributeMap[name] || name;
+
+                if (name in ownerElement) {
+                    ownerElement.removeAttribute(name);
+
+                    onChange = value => (ownerElement[name] = value);
+                } else
+                    onChange = value => ownerElement.setAttribute(name, value);
 
                 this.addNode(
                     'Attr',
                     ownerElement,
-                    new Template(
-                        value,
-                        injection,
-                        name in ownerElement
-                            ? value => (ownerElement[name] = value)
-                            : value => ownerElement.setAttribute(name, value)
-                    )
+                    new Template(value, injection, onChange)
                 );
             },
             text: node => {
@@ -173,12 +221,14 @@ export default class View extends Model {
                     )
                 );
             },
-            view: node =>
-                this.addNode(
-                    'View',
-                    node,
-                    new View(View.getTemplate(node).trim(), this.data)
-                )
+            '[data-view]': node => {
+                this.addNode('View', node, View.getTemplate(node).trim());
+
+                return false;
+            },
+            'input[name], textarea[name], select[name]': node => {
+                if (View.instanceOf(node) === this) this.listen(node);
+            }
         });
     }
 
@@ -192,7 +242,8 @@ export default class View extends Model {
     /**
      * @param {Object} data
      *
-     * @return {View}
+     * @emits {CustomEvent} - Cancelable `render`
+     * @emits {CustomEvent} - `rendered`
      */
     async render(data) {
         const { root } = this;
@@ -215,16 +266,16 @@ export default class View extends Model {
             Object.values(this[view_injection])
         );
 
-        forEach.call(this, ({ type, element, renderer }) => {
+        forEach.call(this, ({ type, element, template }) => {
             if (type !== 'View')
-                renderer.evaluate.apply(renderer, [element].concat(injection));
+                template.evaluate.apply(template, [element].concat(injection));
         });
 
-        for (let { type, element, renderer, name } of this)
+        for (let { type, element, template, name } of this)
             if (type === 'View') {
                 await nextTick();
 
-                await this.renderSub(data[name], name, element, renderer);
+                await this.renderSub(data[name], name, element, template);
             }
 
         if (root)
@@ -248,9 +299,9 @@ export default class View extends Model {
      * @param {Object}  data
      * @param {String}  name
      * @param {Element} element
-     * @param {View}    renderer
+     * @param {String}  template
      */
-    async renderSub(data, name, element, renderer) {
+    async renderSub(data, name, element, template) {
         if (!data && data !== null) return;
 
         const sub = element_view.get(element),
@@ -262,7 +313,8 @@ export default class View extends Model {
         sub.splice(data.length, Infinity).forEach(view => view.destroy());
 
         for (let i = 0; data[i]; i++) {
-            sub[i] = sub[i] || renderer.clone();
+            sub[i] =
+                sub[i] || new View(template, this.data, this[view_injection]);
 
             if (isArray) _data_[name][i] = sub[i].data;
             else _data_[name] = sub[i].data;
@@ -273,7 +325,7 @@ export default class View extends Model {
         if (data[0])
             element.append.apply(
                 element,
-                [].concat.apply([], sub.map(view => view.topNodes))
+                concat.apply([], sub.map(view => view.topNodes))
             );
     }
 }

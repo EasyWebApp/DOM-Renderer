@@ -1,7 +1,9 @@
-export * from './utility';
+export * from './DOM/utility';
 
-export { default as Template } from './Template';
+export * from './DOM/CustomInputEvent';
 
-export { default as Model } from './Model';
+export { default as Template } from './view/Template';
 
-export { default } from './View';
+export { default as Model } from './view/Model';
+
+export { default } from './view/View';

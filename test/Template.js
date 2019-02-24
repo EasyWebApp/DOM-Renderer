@@ -1,6 +1,6 @@
 import { spy } from 'sinon';
 
-import Template from '../source/Template';
+import Template from '../source/view/Template';
 
 var onChange = spy(),
     template;

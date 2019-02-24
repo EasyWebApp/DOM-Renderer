@@ -4,8 +4,7 @@
 export const attributeMap = {
     class: 'className',
     for: 'htmlFor',
-    readonly: 'readOnly',
-    value: 'defaultValue'
+    readonly: 'readOnly'
 };
 
 const HTML_page = /<!?(DocType|html|head|body|meta|title|base)[\s\S]*?>/,
@@ -83,31 +82,31 @@ export function* walkDOM(root, filter) {
 }
 
 /**
- * @param {Node}                          root
- * @param {RegExp}                        expression
- * @param {String}                        subView          - CSS selector
- * @param {Object}                        parser
- * @param {function(attr: Attr): void}    parser.attribute
- * @param {function(text: Text): void}    parser.text
- * @param {function(node: Element): void} parser.view
+ * @param {Node}                                 root
+ * @param {RegExp}                               expression
+ * @param {Object}                               parser
+ * @param {function(attr: Attr): void}           parser.attribute
+ * @param {function(text: Text): void}           parser.text
+ * @param {... function(node: Element): Boolean} parser.element - Key for CSS selector, Value for Callback
  */
 export function scanTemplate(
     root,
     expression,
-    subView,
-    { attribute, text, view }
+    { attribute, text, ...element }
 ) {
-    const iterator = walkDOM(root, node =>
-        node.matches instanceof Function && node.matches(subView)
-            ? (view(node), NodeFilter.FILTER_REJECT)
-            : NodeFilter.FILTER_ACCEPT
-    );
+    const iterator = walkDOM(root, node => {
+        if (node.matches)
+            for (let selector in element)
+                if (node.matches(selector) && element[selector](node) === false)
+                    return NodeFilter.FILTER_REJECT;
+
+        return NodeFilter.FILTER_ACCEPT;
+    });
 
     Array.from(iterator, node => {
         switch (node.nodeType) {
             case 1:
-                [].forEach.call(
-                    node.attributes,
+                Array.from(node.attributes).forEach(
                     attr => expression.test(attr.value) && attribute(attr)
                 );
                 break;
@@ -122,4 +121,35 @@ export function scanTemplate(
  */
 export function nextTick() {
     return new Promise(resolve => self.requestAnimationFrame(resolve));
+}
+
+/**
+ * @param {HTMLElement} input
+ *
+ * @return {String|String[]}
+ */
+export function valueOf(input) {
+    switch (input.type || input.tagName.toLowerCase()) {
+        case 'radio':
+            return input.checked ? input.value : null;
+        case 'checkbox':
+            return Array.from(
+                input.form
+                    ? input.form.elements[input.name]
+                    : input
+                        .getRootNode()
+                        .querySelectorAll(
+                            `input[type="checkbox"][name="${input.name}"]`
+                        ),
+                node => (node.checked ? node.value : null)
+            );
+        case 'select':
+            return input.multiple
+                ? Array.from(input.options, node =>
+                    node.selected ? node.value : null
+                )
+                : input.value;
+    }
+
+    return input.value;
 }

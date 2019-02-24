@@ -1,6 +1,8 @@
-import { parseDOM } from '../source/utility';
+import { typeIn } from '../source/DOM/polyfill';
 
-import View from '../source/View';
+import { parseDOM, nextTick } from '../source/DOM/utility';
+
+import View from '../source/view/View';
 
 import template from './source/index.html';
 
@@ -64,6 +66,8 @@ describe('DOM View', () => {
             <li>\${view.title}</li>
         </template>
     <li>freeCodeCamp</li><li>MVP</li><li>KaiYuanShe</li></ol>
+
+    <textarea name="name" placeholder="Switch account"></textarea>
 `);
     });
 
@@ -123,6 +127,8 @@ describe('DOM View', () => {
             <li>\${view.title}</li>
         </template>
     </ol>
+
+    <textarea name="name" placeholder="Switch account"></textarea>
 `);
     });
 
@@ -150,5 +156,18 @@ describe('DOM View', () => {
      */
     it('Get the View of a Node', () => {
         View.instanceOf(getFirsts()[2].firstChild).should.be.equal(view.job[0]);
+    });
+
+    /**
+     * @test {View#listen}
+     */
+    it('Auto update from Input fields', async () => {
+        const element = view.topNodes.filter(node => node.nodeType === 1);
+
+        await typeIn(element[3], 'test-example');
+
+        await nextTick();
+
+        element[0].textContent.trim().should.be.equal('Hello, test-example !');
     });
 });

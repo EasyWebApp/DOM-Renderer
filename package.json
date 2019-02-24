@@ -1,12 +1,13 @@
 {
     "name": "dom-renderer",
-    "version": "0.7.0",
-    "description": "Template engine based on HTML 5 & ECMAScript 6",
+    "version": "0.8.0",
+    "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",
         "html",
         "ecmascript",
-        "render"
+        "render",
+        "mvvm"
     ],
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
@@ -29,7 +30,8 @@
         "format": "prettier --write \"{,!(node_modules|.git|dist|docs)/**/}*.{html,md,css,less,js,json,yml,yaml}\"",
         "lint": "eslint source/ test/ --fix",
         "pack": "cross-env NODE_ENV=pack  amd-bundle source/index dist/dom-renderer -m",
-        "build": "npm run format  &&  npm run lint  &&  npm run pack",
+        "patch": "babel source/DOM/polyfill.js -o dist/polyfill.js",
+        "build": "npm run format  &&  npm run lint  &&  npm run pack  &&  npm run patch",
         "debug": "npm run pack  &&  mocha --inspect-brk",
         "test": "npm run build  &&  mocha --exit  &&  esdoc",
         "prepublishOnly": "npm test",
@@ -44,13 +46,15 @@
         "@babel/polyfill": "^7.2.5"
     },
     "devDependencies": {
+        "@babel/cli": "^7.2.3",
         "@babel/polyfill": "^7.2.5",
         "@babel/preset-env": "^7.3.1",
         "@babel/register": "^7.0.0",
-        "amd-bundle": "^1.7.4",
+        "amd-bundle": "^1.7.5",
         "babel-plugin-inline-import": "^3.0.0",
         "cross-env": "^5.2.0",
         "esdoc": "^1.1.0",
+        "esdoc-ecmascript-proposal-plugin": "^1.0.0",
         "esdoc-external-webapi-plugin": "^1.0.0",
         "esdoc-standard-plugin": "^1.0.0",
         "eslint": "^5.14.1",

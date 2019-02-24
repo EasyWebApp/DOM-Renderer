@@ -1,8 +1,8 @@
 import { spy } from 'sinon';
 
-import Model from '../source/Model';
+import Model from '../source/view/Model';
 
-import { nextTick } from '../source/utility';
+import { nextTick } from '../source/DOM/utility';
 
 const onCommit = spy();
 

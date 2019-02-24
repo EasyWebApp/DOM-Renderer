@@ -1,4 +1,4 @@
-import { nextTick } from './utility';
+import { nextTick } from '../DOM/utility';
 
 const view_data = new WeakMap(),
     cache_data = Symbol('Cache data'),

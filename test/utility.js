@@ -3,9 +3,9 @@ import {
     walkDOM,
     scanTemplate,
     stringifyDOM
-} from '../source/utility';
+} from '../source/DOM/utility';
 
-import Template from '../source/Template';
+import Template from '../source/view/Template';
 
 import template from './source/index.html';
 
@@ -54,6 +54,8 @@ describe('DOM utility', () => {
                 '#text',
                 'TEMPLATE',
                 '#text',
+                '#text',
+                'TEXTAREA',
                 '#text'
             ]
         );
@@ -65,15 +67,17 @@ describe('DOM utility', () => {
     it('Template scanning', () => {
         const key_node = [];
 
-        scanTemplate(fragment, Template.Expression, '[data-view]', {
+        scanTemplate(fragment, Template.Expression, {
             attribute(node) {
                 key_node.push(node.value);
             },
             text(node) {
                 key_node.push(node.nodeValue.trim());
             },
-            view(node) {
+            ['[data-view]'](node) {
                 key_node.push(node.tagName);
+
+                return false;
             }
         });
 
