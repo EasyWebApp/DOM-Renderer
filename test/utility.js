@@ -1,7 +1,7 @@
 import {
     parseDOM,
     walkDOM,
-    scanTemplate,
+    scanDOM,
     stringifyDOM
 } from '../source/DOM/utility';
 
@@ -38,36 +38,50 @@ describe('DOM utility', () => {
      * @test {walkDOM}
      */
     it('DOM walking', () => {
-        Array.from(walkDOM(fragment), ({ nodeName }) => nodeName).should.be.eql(
-            [
-                '#document-fragment',
-                '#text',
-                'H1',
-                '#text',
-                '#text',
-                'UL',
-                '#text',
-                'TEMPLATE',
-                '#text',
-                '#text',
-                'OL',
-                '#text',
-                'TEMPLATE',
-                '#text',
-                '#text',
-                'TEXTAREA',
-                '#text'
-            ]
-        );
+        Array.from(
+            walkDOM(fragment, null, true),
+            ({ nodeValue, nodeName }) => (nodeValue || '').trim() || nodeName
+        ).should.be.eql([
+            '#document-fragment',
+            '#text',
+            'H1',
+            'Hello, ${view.name} !',
+            '#text',
+            'UL',
+            '#text',
+            'TEMPLATE',
+            '#document-fragment',
+            '#text',
+            'LI',
+            '${view.URL}',
+            '#text',
+            'LI',
+            '${view.title}',
+            '#text',
+            '#text',
+            '#text',
+            'OL',
+            '#text',
+            'TEMPLATE',
+            '#document-fragment',
+            '#text',
+            'LI',
+            '${view.title}',
+            '#text',
+            '#text',
+            '#text',
+            'TEXTAREA',
+            '#text'
+        ]);
     });
 
     /**
-     * @test {scanTemplate}
+     * @test {scanDOM}
      */
     it('Template scanning', () => {
         const key_node = [];
 
-        scanTemplate(fragment, Template.Expression, {
+        scanDOM(fragment, Template.Expression, {
             attribute(node) {
                 key_node.push(node.value);
             },
@@ -84,7 +98,9 @@ describe('DOM utility', () => {
         key_node.should.be.eql([
             '${! view.name}',
             'Hello, ${view.name} !',
+            '${! view.name}',
             'UL',
+            '${! view.name}',
             'OL'
         ]);
     });

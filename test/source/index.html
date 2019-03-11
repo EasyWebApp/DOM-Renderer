@@ -3,7 +3,7 @@
         Hello, ${view.name} !
     </h1>
 
-    <ul data-view="profile">
+    <ul data-view="profile" hidden="${! view.name}">
         <template>
             <li title="${scope.name}">
                 ${view.URL}
@@ -12,7 +12,7 @@
         </template>
     </ul>
 
-    <ol data-view="job">
+    <ol data-view="job" hidden="${! view.name}">
         <template>
             <li>${view.title}</li>
         </template>

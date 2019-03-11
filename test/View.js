@@ -24,7 +24,9 @@ describe('DOM View', () => {
         Array.from(view, ({ type }) => type).should.match([
             'Attr',
             'Text',
+            'Attr',
             'View',
+            'Attr',
             'View'
         ]);
 

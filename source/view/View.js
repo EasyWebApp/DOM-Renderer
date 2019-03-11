@@ -2,7 +2,7 @@ import Model from './Model';
 
 import {
     parseDOM,
-    scanTemplate,
+    scanDOM,
     stringifyDOM,
     attributeMap,
     nextTick,
@@ -187,7 +187,7 @@ export default class View extends Model {
             Object.keys(this[view_injection])
         );
 
-        scanTemplate(root, Template.Expression, {
+        scanDOM(root, Template.Expression, {
             attribute: ({ ownerElement, name, value }) => {
                 var onChange;
 

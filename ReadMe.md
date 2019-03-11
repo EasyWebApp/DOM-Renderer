@@ -27,7 +27,7 @@
 }
 ```
 
-`source/index.html` [**Template syntax**](https://web-cell/DOM-Renderer/manual/Template.html)
+`source/index.html` [**Template syntax**](https://web-cell.tk/DOM-Renderer/manual/Template.html)
 
 ```HTML
 <template>
@@ -35,7 +35,7 @@
         Hello, ${view.name} !
     </h1>
 
-    <ul data-view="profile">
+    <ul data-view="profile" hidden="${! view.name}">
         <template>
             <li title="${scope.name}">
                 ${view.URL}
@@ -44,7 +44,7 @@
         </template>
     </ul>
 
-    <ol data-view="job">
+    <ol data-view="job" hidden="${! view.name}">
         <template>
             <li>${view.title}</li>
         </template>
@@ -100,7 +100,7 @@ view.render( data ).then(() => console.log(view + ''));
 ### Web browser
 
 ```HTML
-<script src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.2.5/dist/polyfill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dom-renderer"></script>
 ```
 

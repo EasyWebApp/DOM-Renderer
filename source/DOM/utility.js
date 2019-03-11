@@ -25,7 +25,7 @@ export function parseDOM(markup) {
 
 const Document_Level = ['#document', 'html', 'head', 'body'],
     serializer = new XMLSerializer(),
-    documentXML = document.implementation.createDocument(null, 'xml');
+    documentXML = document.implementation.createDocument(null, 'xml', null);
 
 function stringOf(node) {
     if (node.querySelectorAll)
@@ -64,12 +64,13 @@ export function stringifyDOM(list) {
 }
 
 /**
- * @param {Node}                          root
+ * @param {Node}                         root
  * @param {function(node: Node): Number} [filter] - https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter/acceptNode
+ * @param {Boolean}                      [sub]    - Go into Sub DOM
  *
  * @yield {Node}
  */
-export function* walkDOM(root, filter) {
+export function* walkDOM(root, filter, sub) {
     var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL, {
             acceptNode:
                 filter instanceof Function
@@ -78,7 +79,16 @@ export function* walkDOM(root, filter) {
         }),
         node;
 
-    while ((node = iterator.nextNode())) yield node;
+    while ((node = iterator.nextNode())) {
+        yield node;
+
+        if (!sub) continue;
+
+        const subDOM = node.content || node.shadowRoot;
+
+        if (subDOM instanceof DocumentFragment)
+            yield* walkDOM(subDOM, filter, sub);
+    }
 }
 
 /**
@@ -89,16 +99,21 @@ export function* walkDOM(root, filter) {
  * @param {function(text: Text): void}           parser.text
  * @param {... function(node: Element): Boolean} parser.element - Key for CSS selector, Value for Callback
  */
-export function scanTemplate(
-    root,
-    expression,
-    { attribute, text, ...element }
-) {
+export function scanDOM(root, expression, { attribute, text, ...element }) {
+    function scanAttr(node) {
+        Array.from(node.attributes).forEach(
+            attr => expression.test(attr.value) && attribute(attr)
+        );
+    }
+
     const iterator = walkDOM(root, node => {
-        if (node.matches)
+        if (node.matches) {
+            scanAttr(node);
+
             for (let selector in element)
                 if (node.matches(selector) && element[selector](node) === false)
                     return NodeFilter.FILTER_REJECT;
+        }
 
         return NodeFilter.FILTER_ACCEPT;
     });
@@ -106,9 +121,7 @@ export function scanTemplate(
     Array.from(iterator, node => {
         switch (node.nodeType) {
             case 1:
-                Array.from(node.attributes).forEach(
-                    attr => expression.test(attr.value) && attribute(attr)
-                );
+                scanAttr(node);
                 break;
             case 3:
                 if (expression.test(node.nodeValue)) text(node);
