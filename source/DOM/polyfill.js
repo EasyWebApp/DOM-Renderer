@@ -30,26 +30,18 @@ const { window } = new JSDOM('', {
  *
  * @return {Promise}
  */
-export function typeIn(input, raw) {
-    return Promise.all(
-        Array.from(
-            raw,
-            data =>
-                new Promise(resolve =>
-                    setTimeout(() => {
-                        input.value += data;
+export async function typeIn(input, raw) {
+    for (let data of raw) {
+        input.value += data;
 
-                        input.dispatchEvent(
-                            new InputEvent('input', {
-                                bubbles: true,
-                                composed: true,
-                                data
-                            })
-                        );
+        input.dispatchEvent(
+            new InputEvent('input', {
+                bubbles: true,
+                composed: true,
+                data
+            })
+        );
 
-                        resolve();
-                    })
-                )
-        )
-    );
+        await new Promise(resolve => setTimeout(resolve));
+    }
 }

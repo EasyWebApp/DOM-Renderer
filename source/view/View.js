@@ -5,13 +5,14 @@ import {
     scanDOM,
     stringifyDOM,
     attributeMap,
-    nextTick,
     valueOf
-} from '../DOM/utility';
-
-import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
+} from '../DOM/parser';
 
 import Template from './Template';
+
+import { debounce, nextTick } from '../DOM/timer';
+
+import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
 
 const { forEach, push, concat } = Array.prototype;
 
@@ -119,7 +120,7 @@ export default class View extends Model {
         if (type !== 'View') {
             concat
                 .apply([], view_varible.map(name => template.keysOf(name)))
-                .forEach(name => this.watch(name));
+                .forEach(name => name && this.watch(name));
 
             return;
         }
@@ -144,10 +145,10 @@ export default class View extends Model {
                 node =>
                     node === input || node.compareDocumentPosition(input) & 16
             ),
-            update = ({ target }) => {
+            update = debounce(({ target }) => {
                 if (View.instanceOf(target) === this)
                     this.commit(target.name, valueOf(target));
-            };
+            });
 
         var list = top_input.get(top);
 
@@ -260,9 +261,9 @@ export default class View extends Model {
         )
             return;
 
-        data = this.patch(data);
+        const temp = this.patch(data);
 
-        const injection = [data, this.scope].concat(
+        const injection = [temp, this.scope].concat(
             Object.values(this[view_injection])
         );
 
@@ -275,14 +276,14 @@ export default class View extends Model {
             if (type === 'View') {
                 await nextTick();
 
-                await this.renderSub(data[name], name, element, template);
+                await this.renderSub(temp[name], name, element, template);
             }
 
         if (root)
             root.dispatchEvent(
                 new CustomEvent('rendered', {
                     bubbles: true,
-                    detail: { view: this, data: this.data }
+                    detail: { view: this, data }
                 })
             );
     }

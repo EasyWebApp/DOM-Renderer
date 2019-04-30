@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "0.8.1",
+    "version": "0.9.0",
     "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",
@@ -32,10 +32,10 @@
         "pack": "cross-env NODE_ENV=pack  amd-bundle source/index dist/dom-renderer -m",
         "patch": "babel source/DOM/polyfill.js -o dist/polyfill.js",
         "build": "npm run format  &&  npm run lint  &&  npm run pack  &&  npm run patch",
-        "debug": "npm run pack  &&  mocha --inspect-brk",
+        "debug": "npm run pack  &&  mocha --inspect-brk --no-timeouts",
         "test": "npm run build  &&  mocha --exit  &&  esdoc",
         "prepublishOnly": "npm test",
-        "help": "esdoc  &&  web-server docs/ -o"
+        "help": "esdoc  &&  opn docs/index.html"
     },
     "husky": {
         "hooks": {
@@ -43,29 +43,29 @@
         }
     },
     "peerDependencies": {
-        "@babel/polyfill": "^7.2.5"
+        "@babel/polyfill": "^7.4.4"
     },
     "devDependencies": {
-        "@babel/cli": "^7.2.3",
-        "@babel/polyfill": "^7.2.5",
-        "@babel/preset-env": "^7.3.4",
-        "@babel/register": "^7.0.0",
-        "amd-bundle": "^1.7.7",
+        "@babel/cli": "^7.4.4",
+        "@babel/polyfill": "^7.4.4",
+        "@babel/preset-env": "^7.4.4",
+        "@babel/register": "^7.4.4",
+        "amd-bundle": "^1.7.8",
         "babel-plugin-inline-import": "^3.0.0",
         "cross-env": "^5.2.0",
         "esdoc": "^1.1.0",
         "esdoc-ecmascript-proposal-plugin": "^1.0.0",
         "esdoc-external-webapi-plugin": "^1.0.0",
         "esdoc-standard-plugin": "^1.0.0",
-        "eslint": "^5.15.1",
-        "husky": "^1.3.1",
-        "jsdom": "^14.0.0",
-        "koapache": "^1.0.6",
-        "mocha": "^6.0.2",
-        "prettier": "^1.16.4",
+        "eslint": "^5.16.0",
+        "husky": "^2.1.0",
+        "jsdom": "^15.0.0",
+        "mocha": "^6.1.4",
+        "opn-cli": "^4.1.0",
+        "prettier": "^1.17.0",
         "should": "^13.2.3",
         "should-sinon": "0.0.6",
-        "sinon": "^7.2.7"
+        "sinon": "^7.3.2"
     },
     "prettier": {
         "tabWidth": 4,

@@ -13,7 +13,7 @@
                 "test": {
                     "source": "./test",
                     "interfaces": ["describe", "it"],
-                    "includes": ["\\.js$"]
+                    "includes": ["\\.spec\\.js$"]
                 },
                 "manual": {
                     "files": ["./manual/Template.md"]

@@ -130,13 +130,6 @@ export function scanDOM(root, expression, { attribute, text, ...element }) {
 }
 
 /**
- * @return {Promise<Number>} https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp
- */
-export function nextTick() {
-    return new Promise(resolve => self.requestAnimationFrame(resolve));
-}
-
-/**
  * @param {HTMLElement} input
  *
  * @return {String|String[]}

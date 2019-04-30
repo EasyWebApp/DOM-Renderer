@@ -13,7 +13,6 @@ export default class Template extends Array {
         Object.assign(super(), {
             [template_raw]: raw,
             [template_scope]: scope || [],
-            [template_value]: null,
             onChange: onChange instanceof Function && onChange
         });
 
@@ -27,7 +26,7 @@ export default class Template extends Array {
     }
 
     toString() {
-        return this[template_value] + '';
+        return this[template_value] != null ? this[template_value] + '' : '';
     }
 
     /**
@@ -103,7 +102,7 @@ export default class Template extends Array {
                 return value;
             }
         } catch (error) {
-            console.warn(error);
+            if (template_value in this) console.warn(error);
         }
 
         return '';

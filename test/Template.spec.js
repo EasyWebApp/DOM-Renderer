@@ -26,7 +26,7 @@ describe('Template evaluator', () => {
 
         template.keysOf().should.be.eql(['test', 'example']);
 
-        onChange.should.be.calledWith('test,example', null);
+        onChange.should.be.calledWith('test,example', undefined);
     });
 
     /**

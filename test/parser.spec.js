@@ -1,9 +1,4 @@
-import {
-    parseDOM,
-    walkDOM,
-    scanDOM,
-    stringifyDOM
-} from '../source/DOM/utility';
+import { parseDOM, walkDOM, scanDOM, stringifyDOM } from '../source/DOM/parser';
 
 import Template from '../source/view/Template';
 
@@ -11,7 +6,7 @@ import template from './source/index.html';
 
 var fragment;
 
-describe('DOM utility', () => {
+describe('DOM parser', () => {
     /**
      * @test {parseDOM}
      */

@@ -2,7 +2,7 @@ import { spy } from 'sinon';
 
 import Model from '../source/view/Model';
 
-import { nextTick } from '../source/DOM/utility';
+import { nextTick } from '../source/DOM/timer';
 
 const onCommit = spy();
 

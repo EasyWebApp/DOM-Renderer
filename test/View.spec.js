@@ -1,6 +1,8 @@
 import { typeIn } from '../source/DOM/polyfill';
 
-import { parseDOM, nextTick } from '../source/DOM/utility';
+import { parseDOM } from '../source/DOM/parser';
+
+import { delay } from '../source/DOM/timer';
 
 import View from '../source/view/View';
 
@@ -168,7 +170,7 @@ describe('DOM View', () => {
 
         await typeIn(element[3], 'test-example');
 
-        await nextTick();
+        await delay(0.3);
 
         element[0].textContent.trim().should.be.equal('Hello, test-example !');
     });
