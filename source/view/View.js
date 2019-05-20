@@ -10,6 +10,8 @@ import {
 
 import Template from './Template';
 
+import ViewList from './ViewList';
+
 import { debounce, nextTick } from '../DOM/timer';
 
 import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
@@ -22,7 +24,6 @@ const view_template = Symbol('View template'),
     view_top = new Map(),
     view_injection = Symbol('View injection'),
     view_varible = ['view', 'scope'],
-    element_view = new WeakMap(),
     top_input = new WeakMap();
 
 export default class View extends Model {
@@ -79,7 +80,7 @@ export default class View extends Model {
      * @return {String} HTML/XML source code of this View
      */
     toString() {
-        return stringifyDOM(this.topNodes);
+        return stringifyDOM(this.topNodes).replace(/\s+$/gm, '');
     }
 
     /**
@@ -125,12 +126,14 @@ export default class View extends Model {
             return;
         }
 
-        const sub_view = [];
-
-        element_view.set(element, sub_view);
+        const view_list = new ViewList(
+            element,
+            this.data,
+            this[view_injection]
+        );
 
         this.watch(name, {
-            get: () => (sub_view[1] ? sub_view : sub_view[0])
+            get: () => (view_list[1] ? view_list : view_list[0])
         });
     }
 
@@ -272,11 +275,18 @@ export default class View extends Model {
                 template.evaluate.apply(template, [element].concat(injection));
         });
 
-        for (let { type, element, template, name } of this)
+        for (let { type, element, name } of this)
             if (type === 'View') {
                 await nextTick();
 
-                await this.renderSub(temp[name], name, element, template);
+                const view_list = new ViewList(element),
+                    data = temp[name];
+
+                if (data === null) view_list.clear();
+                else if (data)
+                    await view_list.render(
+                        data instanceof Array ? data : [data]
+                    );
             }
 
         if (root)
@@ -292,41 +302,5 @@ export default class View extends Model {
         view_top.get(this).forEach(node => node.remove());
 
         view_top.delete(this);
-    }
-
-    /**
-     * @protected
-     *
-     * @param {Object}  data
-     * @param {String}  name
-     * @param {Element} element
-     * @param {String}  template
-     */
-    async renderSub(data, name, element, template) {
-        if (!data && data !== null) return;
-
-        const sub = element_view.get(element),
-            isArray = data instanceof Array,
-            _data_ = this.data;
-
-        data = isArray ? Array.from(data) : data ? [data] : [];
-
-        sub.splice(data.length, Infinity).forEach(view => view.destroy());
-
-        for (let i = 0; data[i]; i++) {
-            sub[i] =
-                sub[i] || new View(template, this.data, this[view_injection]);
-
-            if (isArray) _data_[name][i] = sub[i].data;
-            else _data_[name] = sub[i].data;
-
-            await sub[i].render(data[i]);
-        }
-
-        if (data[0])
-            element.append.apply(
-                element,
-                concat.apply([], sub.map(view => view.topNodes))
-            );
     }
 }

@@ -11,6 +11,7 @@ const { window } = new JSDOM('', {
     'self',
     'document',
     'Node',
+    'Element',
     'HTMLElement',
     'DocumentFragment',
     'DOMParser',

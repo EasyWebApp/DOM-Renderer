@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "0.9.0",
+    "version": "1.0.0-alpha",
     "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",
@@ -11,7 +11,7 @@
     ],
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
-    "homepage": "https://web-cell.tk/DOM-Renderer/",
+    "homepage": "https://web-cell.dev/DOM-Renderer/",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/EasyWebApp/DOM-Renderer.git"
@@ -35,7 +35,7 @@
         "debug": "npm run pack  &&  mocha --inspect-brk --no-timeouts",
         "test": "npm run build  &&  mocha --exit  &&  esdoc",
         "prepublishOnly": "npm test",
-        "help": "esdoc  &&  opn docs/index.html"
+        "help": "esdoc  &&  open-cli docs/index.html"
     },
     "husky": {
         "hooks": {
@@ -58,11 +58,11 @@
         "esdoc-external-webapi-plugin": "^1.0.0",
         "esdoc-standard-plugin": "^1.0.0",
         "eslint": "^5.16.0",
-        "husky": "^2.1.0",
-        "jsdom": "^15.0.0",
+        "husky": "^2.3.0",
+        "jsdom": "^15.1.0",
         "mocha": "^6.1.4",
-        "opn-cli": "^4.1.0",
-        "prettier": "^1.17.0",
+        "open-cli": "^5.0.0",
+        "prettier": "^1.17.1",
         "should": "^13.2.3",
         "should-sinon": "0.0.6",
         "sinon": "^7.3.2"

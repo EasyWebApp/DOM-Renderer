@@ -27,7 +27,7 @@
 }
 ```
 
-`source/index.html` [**Template syntax**](https://web-cell.tk/DOM-Renderer/manual/Template.html)
+`source/index.html` [**Template syntax**](https://web-cell.dev/DOM-Renderer/manual/Template.html)
 
 ```HTML
 <template>
@@ -167,7 +167,7 @@ console.log( view.name );     // 'TechQuery'
 
 console.log( view.profile );  // View {}
 
-console.log( view.job );      // [View {}, View {}, View {}]
+console.log( view.job );      // ViewList [View {}, View {}, View {}]
 ```
 
 ### Setter
@@ -187,4 +187,4 @@ nextTick().then(() => {
 
 ## Typical cases
 
-1.  [WebCell](https://web-cell.tk/)
+1.  [WebCell](https://web-cell.dev/)

@@ -52,7 +52,6 @@ describe('DOM View', () => {
     <h1>
         Hello, TechQuery !
     </h1>
-
     <ul data-view="profile">
         <template>
             <li title="\${scope.name}">
@@ -60,19 +59,20 @@ describe('DOM View', () => {
             </li>
             <li>\${view.title}</li>
         </template>
-    <li title="TechQuery">
+            <li title="TechQuery">
                 https://tech-query.me/
             </li>
-            <li>Web/JavaScript full-stack engineer</li></ul>
-
+            <li>Web/JavaScript full-stack engineer</li>
+        </ul>
     <ol data-view="job">
         <template>
             <li>\${view.title}</li>
         </template>
-    <li>freeCodeCamp</li><li>MVP</li><li>KaiYuanShe</li></ol>
-
-    <textarea name="name" placeholder="Switch account"></textarea>
-`);
+            <li>freeCodeCamp</li>
+            <li>MVP</li>
+            <li>KaiYuanShe</li>
+        </ol>
+    <textarea name="name" placeholder="Switch account"></textarea>`);
     });
 
     function getFirsts() {
@@ -113,7 +113,6 @@ describe('DOM View', () => {
     <h1>
         Hello, tech-query !
     </h1>
-
     <ul data-view="profile">
         <template>
             <li title="\${scope.name}">
@@ -121,19 +120,17 @@ describe('DOM View', () => {
             </li>
             <li>\${view.title}</li>
         </template>
-    <li title="TechQuery">
+            <li title="TechQuery">
                 https://tech-query.me/
             </li>
-            <li>Web/JavaScript full-stack engineer</li></ul>
-
+            <li>Web/JavaScript full-stack engineer</li>
+        </ul>
     <ol data-view="job">
         <template>
             <li>\${view.title}</li>
         </template>
     </ol>
-
-    <textarea name="name" placeholder="Switch account"></textarea>
-`);
+    <textarea name="name" placeholder="Switch account"></textarea>`);
     });
 
     /**
@@ -152,7 +149,7 @@ describe('DOM View', () => {
         await view.commit('job', _data_.job);
 
         getFirsts().should.match(first);
-        (view.job[0] + '').should.be.equal('<li>FYClub</li>');
+        (view.job[0] + '').trim().should.be.equal('<li>FYClub</li>');
     });
 
     /**

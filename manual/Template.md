@@ -43,4 +43,4 @@ Source code of **DOM-Renderer** templates is legal [HTML 5 markups][1] with lega
 [1]: https://developer.mozilla.org/en-US/docs/Web/HTML
 [2]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
 [3]: https://developer.mozilla.org/en-US/docs/Web/API/element
-[4]: https://web-cell.tk/DOM-Renderer/class/source/view/View.js~View.html
+[4]: https://web-cell.dev/DOM-Renderer/class/source/view/View.js~View.html
