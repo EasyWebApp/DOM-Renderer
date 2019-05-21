@@ -128,34 +128,3 @@ export function scanDOM(root, expression, { attribute, text, ...element }) {
         }
     });
 }
-
-/**
- * @param {HTMLElement} input
- *
- * @return {String|String[]}
- */
-export function valueOf(input) {
-    switch (input.type || input.tagName.toLowerCase()) {
-        case 'radio':
-            return input.checked ? input.value : null;
-        case 'checkbox':
-            return Array.from(
-                input.form
-                    ? input.form.elements[input.name]
-                    : input
-                        .getRootNode()
-                        .querySelectorAll(
-                            `input[type="checkbox"][name="${input.name}"]`
-                        ),
-                node => (node.checked ? node.value : null)
-            );
-        case 'select':
-            return input.multiple
-                ? Array.from(input.options, node =>
-                    node.selected ? node.value : null
-                )
-                : input.value;
-    }
-
-    return input.value;
-}

@@ -1,3 +1,5 @@
+import { insertableIndexOf, likeArray } from '../object/array';
+
 import { parseDOM } from './parser';
 
 /**
@@ -13,20 +15,6 @@ export function indexOf(node, inNodes) {
     while ((node = node[key])) index++;
 
     return index;
-}
-
-/**
- * @param {Node[]} list
- * @param {Number} [index]
- *
- * @return {Number}
- */
-export function insertableIndexOf(list, index) {
-    return !(index != null) || index > list.length
-        ? list.length
-        : index < 0
-            ? list.length + index
-            : index;
 }
 
 /**
@@ -57,7 +45,7 @@ export function insertTo(parent, child, position, inNodes) {
 export function makeNode(fragment) {
     if (fragment instanceof Node) return fragment;
 
-    if (Object(fragment) instanceof String) return parseDOM(fragment);
+    if (!likeArray(fragment)) return parseDOM(fragment + '');
 
     let node = document.createDocumentFragment();
 
@@ -69,4 +57,36 @@ export function makeNode(fragment) {
     );
 
     return node;
+}
+
+/**
+ * @param {HTMLElement} input
+ *
+ * @return {String|String[]}
+ */
+export function valueOf(input) {
+    const { type, value } = input;
+
+    switch (type) {
+        case 'radio':
+        case 'checkbox': {
+            const root = input.form || input.getRootNode();
+
+            const data = Array.from(
+                root.querySelectorAll(
+                    `input[type="${type}"][name="${input.name}"]`
+                ),
+                item => item.checked && item.value
+            ).filter(Boolean);
+
+            return type === 'radio' ? data[0] : data;
+        }
+        case 'select-multiple':
+            return Array.from(
+                input.options,
+                node => node.selected && node.value
+            ).filter(Boolean);
+    }
+
+    return value;
 }

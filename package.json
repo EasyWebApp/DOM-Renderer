@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "1.0.0-alpha",
+    "version": "1.0.0-beta",
     "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",

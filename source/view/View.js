@@ -1,19 +1,12 @@
 import Model from './Model';
 
-import {
-    parseDOM,
-    scanDOM,
-    stringifyDOM,
-    attributeMap,
-    valueOf
-} from '../DOM/parser';
+import { parseDOM, scanDOM, stringifyDOM, attributeMap } from '../DOM/parser';
 
 import Template from './Template';
-
 import ViewList from './ViewList';
 
 import { debounce, nextTick } from '../DOM/timer';
-
+import { valueOf } from '../DOM/manipulate';
 import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
 
 const { forEach, push, concat } = Array.prototype;

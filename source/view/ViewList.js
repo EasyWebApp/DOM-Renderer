@@ -1,6 +1,8 @@
 import View from './View';
 
-import { insertableIndexOf, insertTo, makeNode } from '../DOM/insert';
+import { insertableIndexOf } from '../object/array';
+
+import { insertTo, makeNode } from '../DOM/manipulate';
 
 const root_list = new WeakMap(),
     list_root = new WeakMap(),
