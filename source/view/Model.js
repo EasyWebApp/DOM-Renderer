@@ -4,13 +4,13 @@ const view_data = new WeakMap(),
     cache_data = Symbol('Cache data'),
     next_tick = Symbol('Next tick');
 
-export default class Model {
+export default class Model extends Map {
     /**
      * @param {Object}                       parent     - Scope of this Model
      * @param {function(data: Object): void} [onCommit] - Async updater (Key in `this` is acceptable)
      */
     constructor(parent, onCommit) {
-        view_data.set(this, parent ? Object.setPrototypeOf({}, parent) : {});
+        view_data.set(super(), parent ? Object.setPrototypeOf({}, parent) : {});
 
         Object.assign(this, {
             [cache_data]: null,

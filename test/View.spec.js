@@ -1,38 +1,46 @@
 import { typeIn } from '../source/DOM/polyfill';
 
 import { parseDOM } from '../source/DOM/parser';
-
 import { delay } from '../source/DOM/timer';
 
 import View from '../source/view/View';
+import Template from '../source/view/Template';
 
 import template from './source/index.html';
-
 import data from './source/index.json';
 
-var view = parseDOM(template).firstElementChild.innerHTML;
+import { format } from 'prettier';
+
+var view = parseDOM(template).firstElementChild.innerHTML.trim();
 
 /**
  * @test {View}
  */
 describe('DOM View', () => {
     /**
-     * @test {View#parseTree}
+     * @test {View#parse}
      * @test {View#addNode}
      */
     it('Parsing', () => {
         view = new View(view);
 
-        Array.from(view, ({ type }) => type).should.match([
-            'Attr',
-            'Text',
-            'Attr',
-            'View',
-            'Attr',
-            'View'
+        view.topNodes.should.have.length(7);
+
+        Array.from(
+            view.keys(),
+            template => template.constructor.name
+        ).should.match([
+            'Template',
+            'Template',
+            'Template',
+            'ViewList',
+            'Template',
+            'ViewList'
         ]);
 
         view.should.have.properties('profile', 'job');
+
+        view.listenKeys.should.be.eql(['name']);
     });
 
     /**
@@ -48,31 +56,34 @@ describe('DOM View', () => {
         view.job[0].should.be.instanceOf(View);
         view.job[0].data.should.be.equal(view.data.job[0]);
 
-        (view + '').should.be.equal(`
-    <h1>
-        Hello, TechQuery !
-    </h1>
-    <ul data-view="profile">
-        <template>
-            <li title="\${scope.name}">
-                \${view.URL}
-            </li>
-            <li>\${view.title}</li>
-        </template>
-            <li title="TechQuery">
-                https://tech-query.me/
-            </li>
-            <li>Web/JavaScript full-stack engineer</li>
-        </ul>
-    <ol data-view="job">
-        <template>
-            <li>\${view.title}</li>
-        </template>
-            <li>freeCodeCamp</li>
-            <li>MVP</li>
-            <li>KaiYuanShe</li>
-        </ol>
-    <textarea name="name" placeholder="Switch account"></textarea>`);
+        format(view + '', {
+            parser: 'html',
+            tabWidth: 4
+        }).should.be.equal(`<h1>
+    Hello, TechQuery !
+</h1>
+<ul data-view="profile">
+    <template>
+        <li title="\${scope.name}">
+            \${view.URL}
+        </li>
+        <li>\${view.title}</li>
+    </template>
+    <li title="TechQuery">
+        https://tech-query.me/
+    </li>
+    <li>Web/JavaScript full-stack engineer</li>
+</ul>
+<ol data-view="job">
+    <template>
+        <li>\${view.title}</li>
+    </template>
+    <li>freeCodeCamp</li>
+    <li>MVP</li>
+    <li>KaiYuanShe</li>
+</ol>
+<textarea name="name" placeholder="Switch account"></textarea>
+`);
     });
 
     function getFirsts() {
@@ -91,7 +102,7 @@ describe('DOM View', () => {
     }
 
     /**
-     * @test {View#renderSub}
+     * @test {ViewList#render}
      */
     it('Updating', async () => {
         const first = getFirsts(),
@@ -109,32 +120,35 @@ describe('DOM View', () => {
         now[1].should.be.equal(first[1]);
         now.should.have.length(2);
 
-        (view + '').should.be.equal(`
-    <h1>
-        Hello, tech-query !
-    </h1>
-    <ul data-view="profile">
-        <template>
-            <li title="\${scope.name}">
-                \${view.URL}
-            </li>
-            <li>\${view.title}</li>
-        </template>
-            <li title="TechQuery">
-                https://tech-query.me/
-            </li>
-            <li>Web/JavaScript full-stack engineer</li>
-        </ul>
-    <ol data-view="job">
-        <template>
-            <li>\${view.title}</li>
-        </template>
-    </ol>
-    <textarea name="name" placeholder="Switch account"></textarea>`);
+        format(view + '', {
+            parser: 'html',
+            tabWidth: 4
+        }).should.be.equal(`<h1>
+    Hello, tech-query !
+</h1>
+<ul data-view="profile">
+    <template>
+        <li title="\${scope.name}">
+            \${view.URL}
+        </li>
+        <li>\${view.title}</li>
+    </template>
+    <li title="TechQuery">
+        https://tech-query.me/
+    </li>
+    <li>Web/JavaScript full-stack engineer</li>
+</ul>
+<ol data-view="job">
+    <template>
+        <li>\${view.title}</li>
+    </template>
+</ol>
+<textarea name="name" placeholder="Switch account"></textarea>
+`);
     });
 
     /**
-     * @test {View#renderSub}
+     * @test {ViewList#render}
      * @test {Model#commit}
      */
     it('Sub view reusing', async () => {
@@ -170,5 +184,23 @@ describe('DOM View', () => {
         await delay(0.3);
 
         element[0].textContent.trim().should.be.equal('Hello, test-example !');
+    });
+
+    /**
+     * @test {View#parse}
+     * @test {View#listenKeys}
+     */
+    it('re-parses a DOM tree', () => {
+        const new_nodes = parseDOM(`
+\${view.name}
+<input name="test">`).childNodes;
+
+        for (let node of [...new_nodes]) node.remove(), view.parse(node);
+
+        view.topNodes.should.have.length(9);
+
+        [...view.keys()][6].should.be.instanceOf(Template);
+
+        view.listenKeys.should.be.eql(['name', 'test']);
     });
 });

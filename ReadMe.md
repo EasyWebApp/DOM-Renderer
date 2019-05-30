@@ -64,7 +64,9 @@ import data from './index.json';
 
 const view = new View( View.getTemplate( parseDOM( template ) ) );
 
-view.render( data ).then(() => console.log(view + ''));
+await view.render( data );
+
+console.log(view + '');
 ```
 
 **Console output** (formatted)
@@ -179,11 +181,51 @@ document.body.append(... view.topNodes);
 
 view.name = 'tech-query';
 
-nextTick().then(() => {
+await nextTick();
 
-    console.log( document.querySelector('h1').textContent );  // 'Hello, tech-query !'
-});
+console.log( document.querySelector('h1').textContent );  // 'Hello, tech-query !'
 ```
+
+### Inserting
+
+```javascript
+await view.job.insert({ title: 'ThoughtWorks' });
+
+console.log(view.job + '');
+```
+
+**Console output** (formatted)
+
+```html
+<ol data-view="job">
+    <template>
+        <li>${view.title}</li>
+    </template>
+    <li>FYClub</li>
+    <li>freeCodeCamp</li>
+    <li>MVP</li>
+    <li>KaiYuanShe</li>
+    <li>ThoughtWorks</li>
+</ol>
+```
+
+### Re-parsing
+
+```javascript
+const textNode = document.createTextNode('${view.test}');
+
+view.parse(textNode);
+
+await view.render({ test: 'example' });
+
+document.body.append(textNode);
+
+console.log(textNode.nodeValue); // 'example'
+```
+
+## Developer manual
+
+https://web-cell.dev/DOM-Renderer/manual/
 
 ## Typical cases
 

@@ -2,24 +2,11 @@ import { parseDOM } from '../source/DOM/parser';
 
 import { indexOf, insertTo, valueOf } from '../source/DOM/manipulate';
 
-const form = parseDOM(`<form>
-    <input type="radio" name="radio" value="r1" checked>
-    <input type="radio" name="radio" value="r2">
+import HTML from './source/form.html';
 
-    <input type="checkbox" name="check" value="c1" checked>
-    <input type="checkbox" name="check" value="c2">
-    <input type="checkbox" name="check" value="c3" checked>
+const form = parseDOM(HTML).firstChild;
 
-    <select name="select" multiple>
-        <option>s1</option>
-        <option selected>s2</option>
-        <option selected>s3</option>
-    </select>
-
-    <textarea name="text">example</textarea>
-</form>`).firstChild;
-
-describe('DOM inserting', () => {
+describe('DOM manipulation', () => {
     /**
      * @test {indexOf}
      */

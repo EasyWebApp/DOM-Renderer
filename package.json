@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "1.0.0-beta",
+    "version": "1.0.0",
     "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",
@@ -48,7 +48,7 @@
     "devDependencies": {
         "@babel/cli": "^7.4.4",
         "@babel/polyfill": "^7.4.4",
-        "@babel/preset-env": "^7.4.4",
+        "@babel/preset-env": "^7.4.5",
         "@babel/register": "^7.4.4",
         "amd-bundle": "^1.7.8",
         "babel-plugin-inline-import": "^3.0.0",
@@ -59,7 +59,7 @@
         "esdoc-standard-plugin": "^1.0.0",
         "eslint": "^5.16.0",
         "husky": "^2.3.0",
-        "jsdom": "^15.1.0",
+        "jsdom": "^15.1.1",
         "mocha": "^6.1.4",
         "open-cli": "^5.0.0",
         "prettier": "^1.17.1",

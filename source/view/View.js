@@ -1,6 +1,12 @@
 import Model from './Model';
 
-import { parseDOM, scanDOM, stringifyDOM, attributeMap } from '../DOM/parser';
+import {
+    parseDOM,
+    scanDOM,
+    stringifyDOM,
+    attributeMap,
+    attributeOnly
+} from '../DOM/parser';
 
 import Template from './Template';
 import ViewList from './ViewList';
@@ -9,9 +15,7 @@ import { debounce, nextTick } from '../DOM/timer';
 import { valueOf } from '../DOM/manipulate';
 import CustomInputEvent, { watchInput } from '../DOM/CustomInputEvent';
 
-const { forEach, push, concat } = Array.prototype;
-
-const iterator = [][Symbol.iterator];
+const { findIndex, concat } = Array.prototype;
 
 const view_template = Symbol('View template'),
     view_top = new Map(),
@@ -31,23 +35,11 @@ export default class View extends Model {
         (this[view_template] = template + ''),
         (this[view_injection] = injection);
 
-        const top = [];
+        view_top.set(this, []);
 
-        view_top.set(this, top);
-
-        Array.from(parseDOM(template).childNodes).forEach(node => {
-            node.remove();
-
-            top.push(node);
-
-            if (node.nodeType === 1) this.parseTree(node);
-        });
-
-        Object.freeze(top);
-    }
-
-    [Symbol.iterator]() {
-        return iterator.call(this);
+        Array.from(parseDOM(template).childNodes).forEach(
+            node => (node.remove(), this.parse(node))
+        );
     }
 
     /**
@@ -86,13 +78,28 @@ export default class View extends Model {
     /**
      * @param {HTMLElement} root
      *
+     * @return {Number} Index in `childNodes`
+     */
+    static findTemplate({ childNodes }) {
+        const index = findIndex.call(
+            childNodes,
+            ({ nodeName }) => nodeName.toLowerCase() === 'template'
+        );
+
+        return index != null
+            ? index
+            : findIndex.call(childNodes, ({ nodeType }) => nodeType === 8);
+    }
+
+    /**
+     * @param {HTMLElement} root
+     *
      * @return {String}
      */
     static getTemplate(root) {
-        for (let node of root.childNodes)
-            if (node.nodeName.toLowerCase() === 'template')
-                return node.innerHTML;
-            else if (node.nodeType === 8) return node.nodeValue;
+        const template = root.childNodes[this.findTemplate(root)];
+
+        if (template) return template.innerHTML || template.nodeValue;
 
         const raw = root.innerHTML;
 
@@ -102,32 +109,22 @@ export default class View extends Model {
     /**
      * @protected
      *
-     * @param {String}          type
-     * @param {Element}         element
-     * @param {Template|String} template
+     * @param {Template|ViewList} template
+     * @param {?Element}          element
      */
-    addNode(type, element, template) {
-        const name = element.dataset.view;
+    addNode(template, element) {
+        if (element instanceof Element) var name = (element.dataset || '').view;
 
-        push.call(this, { type, element, template, name });
+        this.set(template, { element, name });
 
-        if (type !== 'View') {
+        if (template instanceof Template)
             concat
-                .apply([], view_varible.map(name => template.keysOf(name)))
-                .forEach(name => name && this.watch(name));
-
-            return;
-        }
-
-        const view_list = new ViewList(
-            element,
-            this.data,
-            this[view_injection]
-        );
-
-        this.watch(name, {
-            get: () => (view_list[1] ? view_list : view_list[0])
-        });
+                .apply([], view_varible.map(key => template.keysOf(key)))
+                .forEach(key => key && this.watch(key));
+        else
+            this.watch(name, {
+                get: () => (template[1] ? template : template[0])
+            });
     }
 
     /**
@@ -138,18 +135,18 @@ export default class View extends Model {
      */
     listen(input) {
         const top = this.topNodes.find(
-                node =>
-                    node === input || node.compareDocumentPosition(input) & 16
-            ),
-            update = debounce(({ target }) => {
-                if (View.instanceOf(target) === this)
-                    this.commit(target.name, valueOf(target));
-            });
+            node => node === input || node.compareDocumentPosition(input) & 16
+        );
 
         var list = top_input.get(top);
 
         if (!list) {
             top_input.set(top, (list = []));
+
+            const update = debounce(({ target }) => {
+                if (View.instanceOf(target) === this)
+                    this.commit(target.name, valueOf(target));
+            });
 
             top.addEventListener('change', update);
 
@@ -161,25 +158,35 @@ export default class View extends Model {
             watchInput(top);
         }
 
-        list.push(input.name);
+        if (!list.includes(input)) list.push(input);
     }
 
     /**
      * @type {String[]}
      */
     get listenKeys() {
-        return concat.apply(
-            [],
-            this.topNodes.map(node => top_input.get(node)).filter(Boolean)
+        return Array.from(
+            new Set(
+                concat.apply(
+                    [],
+                    this.topNodes
+                        .map(node => {
+                            const list = top_input.get(node);
+
+                            return list && list.map(input => input.name);
+                        })
+                        .filter(Boolean)
+                )
+            ).values()
         );
     }
 
     /**
-     * @protected
-     *
-     * @param {Element} root
+     * @param {Node} root
      */
-    parseTree(root) {
+    parse(root) {
+        if (!root.parentNode) view_top.get(this).push(root);
+
         const injection = view_varible.concat(
             Object.keys(this[view_injection])
         );
@@ -190,7 +197,7 @@ export default class View extends Model {
 
                 name = attributeMap[name] || name;
 
-                if (name in ownerElement) {
+                if (name in ownerElement && !(name in attributeOnly)) {
                     ownerElement.removeAttribute(name);
 
                     onChange = value => (ownerElement[name] = value);
@@ -198,28 +205,30 @@ export default class View extends Model {
                     onChange = value => ownerElement.setAttribute(name, value);
 
                 this.addNode(
-                    'Attr',
-                    ownerElement,
-                    new Template(value, injection, onChange)
+                    new Template(value, injection, onChange),
+                    ownerElement
                 );
             },
             text: node => {
                 const { parentNode } = node;
 
                 this.addNode(
-                    'Text',
-                    parentNode,
                     new Template(
                         node.nodeValue,
                         injection,
-                        parentNode.firstElementChild
+                        !parentNode || parentNode.firstElementChild
                             ? value => (node.nodeValue = value)
                             : value => (parentNode.innerHTML = value)
-                    )
+                    ),
+                    parentNode
                 );
             },
             '[data-view]': node => {
-                this.addNode('View', node, View.getTemplate(node).trim());
+                if ((ViewList.instanceOf(node) || '').root !== node)
+                    this.addNode(
+                        new ViewList(node, this.data, this[view_injection]),
+                        node
+                    );
 
                 return false;
             },
@@ -263,17 +272,16 @@ export default class View extends Model {
             Object.values(this[view_injection])
         );
 
-        forEach.call(this, ({ type, element, template }) => {
-            if (type !== 'View')
+        this.forEach(({ element }, template) => {
+            if (template instanceof Template)
                 template.evaluate.apply(template, [element].concat(injection));
         });
 
-        for (let { type, element, name } of this)
-            if (type === 'View') {
+        for (let [view_list, { name }] of this.entries())
+            if (view_list instanceof ViewList) {
                 await nextTick();
 
-                const view_list = new ViewList(element),
-                    data = temp[name];
+                const data = temp[name];
 
                 if (data === null) view_list.clear();
                 else if (data)

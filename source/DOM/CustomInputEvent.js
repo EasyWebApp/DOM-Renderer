@@ -6,7 +6,7 @@ export default class CustomInputEvent extends CustomEvent {
      * @type {HTMLElement}
      */
     get target() {
-        var node = super.target;
+        const node = super.target;
 
         if (this.composed) {
             const root = node.getRootNode();

@@ -7,6 +7,13 @@ export const attributeMap = {
     readonly: 'readOnly'
 };
 
+/**
+ * @type {Object}
+ */
+export const attributeOnly = {
+    list: 1
+};
+
 const HTML_page = /<!?(DocType|html|head|body|meta|title|base)[\s\S]*?>/,
     parser = new DOMParser();
 
@@ -28,7 +35,7 @@ const Document_Level = ['#document', 'html', 'head', 'body'],
     documentXML = document.implementation.createDocument(null, 'xml', null);
 
 function stringOf(node) {
-    if (node.querySelectorAll)
+    if (node instanceof HTMLElement)
         Array.from(
             node.querySelectorAll('style:not(:empty), script:not(:empty)'),
             ({ textContent, firstChild }) =>
@@ -107,7 +114,7 @@ export function scanDOM(root, expression, { attribute, text, ...element }) {
     }
 
     const iterator = walkDOM(root, node => {
-        if (node.matches) {
+        if (node instanceof HTMLElement) {
             scanAttr(node);
 
             for (let selector in element)

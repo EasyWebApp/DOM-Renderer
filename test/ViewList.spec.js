@@ -26,7 +26,7 @@ describe('View list', () => {
      * @test {ViewList#constructor}
      */
     it('creates a View list', () => {
-        list = new ViewList(root, { browser: Array.from(data) });
+        list = new ViewList(root, { browser: [...data] });
 
         list.should.have.length(0);
         root.childNodes.should.have.length(3);
@@ -79,10 +79,14 @@ describe('View list', () => {
      * @test {ViewList#valueOf()}
      */
     it('generates HTML source & JSON data', () => {
-        (list + '').should.be.equal(`
+        (list + '').should.be.equal(`<ul data-view="browser">
+    <template>
+        <li>\${view.name}</li>
+    </template>
         <li>Chrome</li>
         <li>Firefox</li>
-        <li>Opera</li>`);
+        <li>Opera</li>
+</ul>`);
 
         list.valueOf().should.be.eql(data.slice(0, -2));
     });
@@ -97,8 +101,12 @@ describe('View list', () => {
         list.should.have.length(2);
         root.childNodes.should.have.length(9);
 
-        (list + '').should.be.equal(`
+        (list + '').should.be.equal(`<ul data-view="browser">
+    <template>
+        <li>\${view.name}</li>
+    </template>
         <li>Edge</li>
-        <li>Safari</li>`);
+        <li>Safari</li>
+</ul>`);
     });
 });

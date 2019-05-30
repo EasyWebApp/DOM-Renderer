@@ -20,15 +20,29 @@ export default class ViewList extends Array {
 
         if (!(root instanceof Element)) return;
 
-        const that = root_list.get(root);
-
-        if (that) return that;
+        if (root_list.has(root))
+            throw ReferenceError(
+                'One ViewList can only be bound to one Element'
+            );
 
         root_list.set(root, this), list_root.set(this, root);
 
         this[template] = [View.getTemplate(root), scope, injection];
 
-        this[child_offset] = root.childNodes.length;
+        this[child_offset] = View.findTemplate(root) + 1;
+    }
+
+    /**
+     * @param {Node} node
+     *
+     * @return {?ViewList}
+     */
+    static instanceOf(node) {
+        do {
+            const list = root_list.get(node);
+
+            if (list) return list;
+        } while ((node = node.parentNode));
     }
 
     /**
@@ -67,7 +81,7 @@ export default class ViewList extends Array {
      * @return {String} HTML source
      */
     toString() {
-        return this.join('').replace(/\s+$/gm, '');
+        return this.root.outerHTML.replace(/\s+$/gm, '');
     }
 
     /**
