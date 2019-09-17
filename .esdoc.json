@@ -16,7 +16,10 @@
                     "includes": ["\\.spec\\.js$"]
                 },
                 "manual": {
-                    "files": ["./manual/Template.md"]
+                    "files": [
+                        "./manual/Template.md",
+                        "./manual/Render-existed-DOM.md"
+                    ]
                 }
             }
         },

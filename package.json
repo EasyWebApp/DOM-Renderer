@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "description": "Template engine based on HTML 5, ECMAScript 6 & MVVM",
     "keywords": [
         "template",
@@ -27,45 +27,57 @@
         "test": "test"
     },
     "scripts": {
-        "format": "prettier --write \"{,!(node_modules|.git|dist|docs)/**/}*.{html,md,css,less,js,json,yml,yaml}\"",
-        "lint": "eslint source/ test/ --fix",
+        "lint": "lint-staged",
         "pack": "cross-env NODE_ENV=pack  amd-bundle source/index dist/dom-renderer -m",
         "patch": "babel source/DOM/polyfill.js -o dist/polyfill.js",
-        "build": "npm run format  &&  npm run lint  &&  npm run pack  &&  npm run patch",
+        "build": "npm run lint  &&  npm run pack  &&  npm run patch",
         "debug": "npm run pack  &&  mocha --inspect-brk --no-timeouts",
         "test": "npm run build  &&  mocha --exit  &&  esdoc",
         "prepublishOnly": "npm test",
         "help": "esdoc  &&  open-cli docs/index.html"
     },
+    "lint-staged": {
+        "*.{html,md,css,less,json,yml}": [
+            "prettier --write",
+            "git add"
+        ],
+        "*.js": [
+            "prettier --write",
+            "eslint --fix",
+            "git add"
+        ]
+    },
     "husky": {
         "hooks": {
-            "pre-commit": "npm test  &&  git add ."
+            "pre-commit": "npm run lint",
+            "pre-push": "npm test"
         }
     },
     "peerDependencies": {
-        "@babel/polyfill": "^7.4.4"
+        "@babel/polyfill": "^7.6.0"
     },
     "devDependencies": {
-        "@babel/cli": "^7.4.4",
-        "@babel/polyfill": "^7.4.4",
-        "@babel/preset-env": "^7.4.5",
-        "@babel/register": "^7.4.4",
+        "@babel/cli": "^7.6.0",
+        "@babel/polyfill": "^7.6.0",
+        "@babel/preset-env": "^7.6.0",
+        "@babel/register": "^7.6.0",
         "amd-bundle": "^1.7.8",
         "babel-plugin-inline-import": "^3.0.0",
-        "cross-env": "^5.2.0",
+        "cross-env": "^5.2.1",
         "esdoc": "^1.1.0",
         "esdoc-ecmascript-proposal-plugin": "^1.0.0",
         "esdoc-external-webapi-plugin": "^1.0.0",
         "esdoc-standard-plugin": "^1.0.0",
-        "eslint": "^5.16.0",
-        "husky": "^2.3.0",
+        "eslint": "^6.4.0",
+        "husky": "^3.0.5",
         "jsdom": "^15.1.1",
-        "mocha": "^6.1.4",
+        "lint-staged": "^9.2.5",
+        "mocha": "^6.2.0",
         "open-cli": "^5.0.0",
-        "prettier": "^1.17.1",
+        "prettier": "^1.18.2",
         "should": "^13.2.3",
         "should-sinon": "0.0.6",
-        "sinon": "^7.3.2"
+        "sinon": "^7.4.2"
     },
     "prettier": {
         "tabWidth": 4,

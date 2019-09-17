@@ -113,7 +113,7 @@ npm install dom-renderer @babel/polyfill jsdom
 ```
 
 ```JavaScript
-import '@babel/ployfill';
+import '@babel/polyfill';
 import 'dom-renderer/dist/polyfill';
 import View from 'dom-renderer';
 ```

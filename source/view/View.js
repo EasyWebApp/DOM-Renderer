@@ -86,7 +86,7 @@ export default class View extends Model {
             ({ nodeName }) => nodeName.toLowerCase() === 'template'
         );
 
-        return index != null
+        return index > -1
             ? index
             : findIndex.call(childNodes, ({ nodeType }) => nodeType === 8);
     }
@@ -123,7 +123,8 @@ export default class View extends Model {
                 .forEach(key => key && this.watch(key));
         else
             this.watch(name, {
-                get: () => (template[1] ? template : template[0])
+                get: () =>
+                    this.data[name] instanceof Array ? template : template[0]
             });
     }
 
@@ -143,16 +144,17 @@ export default class View extends Model {
         if (!list) {
             top_input.set(top, (list = []));
 
-            const update = debounce(({ target }) => {
+            const update = debounce(target => {
                 if (View.instanceOf(target) === this)
                     this.commit(target.name, valueOf(target));
             });
 
-            top.addEventListener('change', update);
+            top.addEventListener('change', ({ target }) => update(target));
 
             top.addEventListener(
                 'input',
-                event => event instanceof CustomInputEvent && update(event)
+                event =>
+                    event instanceof CustomInputEvent && update(event.target)
             );
 
             watchInput(top);
