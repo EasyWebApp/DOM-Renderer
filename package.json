@@ -1,15 +1,18 @@
 {
     "name": "dom-renderer",
-    "version": "2.0.0-alpha.0",
+    "version": "3.0.0-alpha.0",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
-    "description": "DOM Renderer based on TSX & DOM-compatible virtual DOM",
+    "description": "DOM Renderer with Async Generator support (inspired by Crank.js), which is based on TSX & DOM-compatible virtual DOM.",
     "keywords": [
         "DOM",
         "render",
+        "async",
+        "generator",
         "TypeScript",
         "JSX",
-        "vDOM"
+        "vDOM",
+        "crank"
     ],
     "homepage": "https://web-cell.dev/DOM-Renderer/",
     "repository": {
@@ -20,41 +23,39 @@
         "url": "https://github.com/EasyWebApp/DOM-Renderer/issues"
     },
     "source": "source/index.ts",
+    "dependencies": {
+        "web-utility": "1.5.0"
+    },
     "devDependencies": {
-        "@types/core-js": "^2.5.3",
-        "@types/jest": "^25.1.4",
-        "@types/jsdom": "^16.1.0",
-        "core-js": "^3.6.4",
-        "husky": "^4.2.3",
-        "jest": "^25.1.0",
-        "jsdom": "^16.2.1",
-        "lint-staged": "^10.0.8",
-        "prettier": "^1.19.1",
-        "ts-jest": "^25.2.1",
-        "typescript": "^3.8.3"
+        "@types/jest": "^25.2.3",
+        "husky": "^4.2.5",
+        "jest": "^26.0.1",
+        "lint-staged": "^10.2.7",
+        "prettier": "^2.0.5",
+        "ts-jest": "^26.1.0",
+        "typescript": "^3.9.3"
     },
     "prettier": {
         "singleQuote": true,
+        "trailingComma": "none",
+        "arrowParens": "avoid",
         "tabWidth": 4
     },
     "lint-staged": {
-        "*.{json,ts,tsx}": [
+        "*.{md,json,yml,ts,tsx}": [
             "prettier --write"
         ]
     },
     "jest": {
         "preset": "ts-jest",
-        "testEnvironment": "node",
-        "globals": {
-            "ts-jest": {
-                "tsConfig": "test/tsconfig.json"
-            }
-        }
+        "transformIgnorePatterns": []
     },
     "scripts": {
         "test": "lint-staged && jest"
     },
     "husky": {
-        "pre-commit": "npm test"
+        "hooks": {
+            "pre-commit": "npm test"
+        }
     }
 }

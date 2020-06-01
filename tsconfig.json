@@ -6,7 +6,8 @@
         "esModuleInterop": true,
         "downlevelIteration": true,
         "jsx": "react",
-        "jsxFactory": "createCell",
+        "jsxFactory": "createElement",
         "lib": ["ES2019", "DOM", "DOM.Iterable"]
-    }
+    },
+    "include": ["source/*.ts"]
 }

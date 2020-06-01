@@ -1,74 +1,80 @@
-import { VChild } from './type';
+import {
+    RenderNode,
+    GeneratorNode,
+    VChildNode,
+    VElement,
+    VChildren
+} from './creator';
+import { AsyncComponent } from './AsyncComponent';
+import { clearList } from './utility';
+import { updateTree } from './updater';
 
-const { slice } = Array.prototype;
-
-export function create(vNode: VChild) {
-    if (typeof vNode === 'string') return document.createTextNode(vNode);
-
-    const { tagName, childNodes, ...props } = vNode;
-
-    return Object.assign(document.createElement(tagName), props);
+export function isAsync(node: RenderNode) {
+    return (
+        node instanceof Promise ||
+        (node as GeneratorNode).next instanceof Function
+    );
 }
 
-const cache = new WeakMap();
+export function* updateComponentTree(
+    next: VChildNode[],
+    prev: VChildNode[] = []
+) {
+    for (const node of next)
+        if (node instanceof AsyncComponent) {
+            const index = prev.findIndex(
+                item =>
+                    item instanceof AsyncComponent &&
+                    item.function === node.function
+            );
 
-function save(root: Node, id: string, child: Node) {
-    var map = cache.get(root);
+            if (index < 0) yield node;
+            else {
+                const current = prev.splice(index, 1)[0] as AsyncComponent;
 
-    if (!map) cache.set(root, (map = {}));
+                const { children, ...rest } = node.props;
 
-    map[id] = child;
-}
+                Object.assign(current.props, rest);
 
-export function update(node: Element, vNode: VChild) {
-    if (typeof vNode === 'string') return node.replaceWith(vNode);
-
-    const { tagName, childNodes, ...props } = vNode;
-
-    if (node.tagName?.toLowerCase() !== tagName) {
-        const tag = document.createElement(tagName);
-
-        node.replaceWith(tag);
-
-        node = tag;
-    }
-
-    const prop_map = Object.entries(props);
-
-    for (const { name } of node.attributes) {
-        const [key] =
-            prop_map.find(([key]) => key.toLowerCase() === name) || [];
-
-        if (!key) node.removeAttribute(name);
-    }
-
-    for (const [key, value] of prop_map)
-        if (value !== node[key]) node[key] = value;
-
-    const children = node.childNodes;
-
-    vNode.childNodes.forEach((child, index) => {
-        var old = children[index];
-
-        if (!old) {
-            old = create(child);
-
-            if (child.id) save(node, child.id, old);
-
-            node.append(old);
-        } else {
-            const cached = cache.get(node)?.[child.id];
-
-            if (cached) {
-                old.before(cached);
-
-                old = cached;
+                current.props.children = [
+                    ...updateComponentTree(
+                        children as VChildNode[],
+                        current.props.children as VChildNode[]
+                    )
+                ];
+                yield current;
             }
-        }
+        } else if (typeof node === 'object') {
+            const index = prev.findIndex(
+                (item: VElement) => item.tagName === node.tagName
+            );
 
-        update(old as Element, child);
-    });
+            if (index < 0) yield node;
+            else {
+                const current = prev.splice(index, 1)[0] as VElement;
 
-    for (const child of slice.call(children, vNode.childNodes.length))
-        child.remove();
+                const { childNodes, ...rest } = node;
+
+                Object.assign(current, rest);
+
+                current.childNodes = [
+                    ...updateComponentTree(childNodes, current.childNodes)
+                ];
+                yield current;
+            }
+        } else yield node;
+}
+
+const vTreeMap = new WeakMap<HTMLElement, VChildNode[]>();
+
+export function render(children: VChildren, root = document.body) {
+    children = [
+        ...updateComponentTree(
+            clearList(children as VChildNode[]),
+            vTreeMap.get(root)
+        )
+    ];
+    vTreeMap.set(root, children);
+
+    return updateTree(children, root);
 }
