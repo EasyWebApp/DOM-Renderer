@@ -1,8 +1,11 @@
 {
     "compilerOptions": {
         "esModuleInterop": true,
+        "importHelpers": true,
         "lib": ["ES2023", "DOM"],
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "declaration": true,
+        "outDir": "dist"
     },
     "include": ["source/*.ts"],
     "typedocOptions": {

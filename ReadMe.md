@@ -36,6 +36,33 @@ const newVNode = new DOMRenderer().patch(
 console.log(newVNode);
 ```
 
+### TypeScript
+
+#### `tsconfig.json`
+
+```json
+{
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "dom-renderer"
+    }
+}
+```
+
+#### `index.tsx`
+
+```tsx
+import { DOMRenderer } from 'dom-renderer';
+
+const newVNode = new DOMRenderer().renderer(
+    <a href="https://idea2.app/" style={{ color: 'red' }}>
+        idea2app
+    </a>
+);
+
+console.log(newVNode);
+```
+
 ## Original
 
 ### Inspiration

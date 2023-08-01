@@ -3,5 +3,6 @@ package-lock.json
 yarn.lock
 .parcel-cache/
 dist/
+/jsx-runtime.*
 docs/
 .vscode/settings.json

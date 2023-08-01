@@ -1,19 +1,14 @@
-import { diffKeys, DiffStatus, IndexKey } from 'web-utility';
+import { diffKeys, DiffStatus } from 'web-utility';
 
-export type DataObject = Record<string, any>;
-
-export interface VNode {
-    key?: IndexKey;
-    text?: string;
-    tagName?: string;
-    props?: DataObject;
-    style?: DataObject;
-    children?: VNode[];
-    node?: Node;
-}
+import { DataObject, VNode } from './VDOM';
 
 export class DOMRenderer {
     propsMap: DataObject = { className: 'class', htmlFor: 'for' };
+
+    attrsMap = Object.fromEntries(
+        Object.entries(this.propsMap).map(item => item.reverse())
+    );
+    eventPattern = /^on\w+/;
 
     protected keyOf = ({ key, text, props }: VNode, index?: number) =>
         key || props?.id || text || index;
@@ -25,7 +20,8 @@ export class DOMRenderer {
         node: T,
         oldProps: DataObject = {},
         newProps: DataObject = {},
-        onDelete?: (node: T, key: string) => any
+        onDelete?: (node: T, key: string) => any,
+        onAdd?: (node: T, key: string, value: any) => any
     ) {
         const { group } = diffKeys(
             Object.keys(oldProps),
@@ -39,7 +35,8 @@ export class DOMRenderer {
             ...(group[DiffStatus.New] || [])
         ])
             if (oldProps[key] !== newProps[key])
-                Reflect.set(node, key, newProps[key]);
+                if (onAdd instanceof Function) onAdd(node, key, newProps[key]);
+                else Reflect.set(node, key, newProps[key]);
     }
 
     protected createNode(vNode: VNode) {
@@ -91,7 +88,13 @@ export class DOMRenderer {
             oldVNode.node as Element,
             oldVNode.props,
             newVNode.props,
-            (node, key) => node.removeAttribute(this.propsMap[key] || key)
+            (node, key) =>
+                this.eventPattern.test(key)
+                    ? (node[key.toLowerCase()] = null)
+                    : node.removeAttribute(this.propsMap[key] || key),
+            (node, key, value) =>
+                (node[this.eventPattern.test(key) ? key.toLowerCase() : key] =
+                    value)
         );
         this.updateProps(
             (oldVNode.node as HTMLElement).style,
@@ -107,5 +110,39 @@ export class DOMRenderer {
         newVNode.node = oldVNode.node;
 
         return newVNode;
+    }
+
+    toVNode = (node: Node): VNode => {
+        if (node instanceof Text) return { node, text: node.nodeValue };
+
+        if (!(node instanceof Element)) return;
+
+        const { tagName, attributes, style, childNodes } = node as HTMLElement;
+
+        const vNode: VNode = { node, tagName: tagName.toLowerCase() };
+
+        const props = Array.from(
+            attributes,
+            ({ name, value }) =>
+                name !== 'style' && [this.attrsMap[name] || name, value]
+        ).filter(Boolean);
+
+        if (props[0]) vNode.props = Object.fromEntries(props);
+
+        const styles = Array.from(style, key => [key, style[key]]);
+
+        if (styles[0]) vNode.style = Object.fromEntries(styles);
+
+        const children = Array.from(childNodes, this.toVNode).filter(Boolean);
+
+        if (children[0]) vNode.children = children;
+
+        return vNode;
+    };
+
+    render(vNode: VNode, node: Element = document.body) {
+        const root = this.toVNode(node);
+
+        return this.patch(root, { ...root, children: [vNode] });
     }
 }
