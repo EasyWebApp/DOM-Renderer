@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "lib": ["ES2023", "DOM"],
+        "skipLibCheck": true
+    },
+    "include": ["source/*.ts"],
+    "typedocOptions": {
+        "name": "DOM Renderer",
+        "excludeExternals": true,
+        "excludePrivate": true,
+        "readme": "./ReadMe.md",
+        "plugin": ["typedoc-plugin-mdn-links"]
+    }
+}
