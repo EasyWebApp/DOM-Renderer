@@ -13,8 +13,13 @@ export interface VNode {
 }
 
 export class DOMRenderer {
+    propsMap: DataObject = { className: 'class', htmlFor: 'for' };
+
     protected keyOf = ({ key, text, props }: VNode, index?: number) =>
         key || props?.id || text || index;
+
+    protected vNodeOf = (list: VNode[], key: string) =>
+        list.find((vNode, index) => this.keyOf(vNode, index) + '' === key);
 
     protected updateProps<T extends DataObject>(
         node: T,
@@ -61,12 +66,8 @@ export class DOMRenderer {
             newList.map(this.keyOf)
         );
 
-        for (const [key] of group[DiffStatus.Old] || []) {
-            const { node } =
-                oldList.find(vNode => this.keyOf(vNode) === key) || {};
-
-            (node as ChildNode)?.remove();
-        }
+        for (const [key] of group[DiffStatus.Old] || [])
+            (this.vNodeOf(oldList, key)?.node as ChildNode)?.remove();
 
         const newNodes = newList
             .map((vNode, index) => {
@@ -76,10 +77,8 @@ export class DOMRenderer {
                     case DiffStatus.New:
                         return this.createNode(vNode);
                     case DiffStatus.Same:
-                        return this.patch(
-                            oldList.find(vNode => this.keyOf(vNode) === key)!,
-                            vNode
-                        ).node;
+                        return this.patch(this.vNodeOf(oldList, key)!, vNode)
+                            .node;
                 }
             })
             .filter(Boolean) as Node[];
@@ -92,7 +91,7 @@ export class DOMRenderer {
             oldVNode.node as Element,
             oldVNode.props,
             newVNode.props,
-            (node, key) => node.removeAttribute(key)
+            (node, key) => node.removeAttribute(this.propsMap[key] || key)
         );
         this.updateProps(
             (oldVNode.node as HTMLElement).style,

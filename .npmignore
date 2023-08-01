@@ -1,4 +1,6 @@
 .parcel-cache/
+test/
 docs/
 .husky/
 .github/
+.vscode/

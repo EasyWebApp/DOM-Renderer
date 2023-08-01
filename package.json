@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.0.0-alpha.0",
+    "version": "2.0.0-alpha.1",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -31,11 +31,16 @@
     "devDependencies": {
         "@parcel/packager-ts": "~2.8.3",
         "@parcel/transformer-typescript-types": "~2.8.3",
+        "@types/jest": "^29.5.3",
+        "@types/node": "^18.17.1",
         "husky": "^8.0.3",
+        "jest": "^29.6.2",
+        "jest-environment-jsdom": "^29.6.2",
         "lint-staged": "^13.2.3",
         "open-cli": "^7.2.0",
         "parcel": "~2.8.3",
         "prettier": "^3.0.0",
+        "ts-jest": "^29.1.1",
         "typedoc": "^0.24.8",
         "typedoc-plugin-mdn-links": "^3.0.3",
         "typescript": "~5.1.6"
@@ -49,6 +54,10 @@
     "lint-staged": {
         "*.{md,json,yml,ts}": "prettier --write"
     },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "jsdom"
+    },
     "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
     "targets": {
         "main": {
@@ -57,7 +66,7 @@
     },
     "scripts": {
         "prepare": "husky install",
-        "test": "lint-staged",
+        "test": "lint-staged  &&  jest",
         "build": "rm -rf dist/ docs/  &&  typedoc source/  &&  parcel build",
         "start": "typedoc source/  &&  open-cli docs/index.html",
         "prepublishOnly": "npm test  &&  npm run build"
