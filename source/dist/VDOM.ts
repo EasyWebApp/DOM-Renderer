@@ -7,6 +7,7 @@ export interface VNode {
     text?: string;
     selector?: string;
     tagName?: string;
+    is?: string;
     props?: DataObject;
     style?: DataObject;
     children?: VNode[];
@@ -16,18 +17,24 @@ export interface VNode {
 export class VDOMNode implements VNode {
     text?: string;
     tagName?: string;
+    is?: string;
     props?: DataObject;
     style?: DataObject;
     children?: VNode[];
 
-    static selectorOf = (tagName: string, className?: string) =>
-        tagName.toLowerCase() +
-        (className ? `.${className.trim().replace(/\s+/, '.')}` : '');
+    static selectorOf = (tagName: string, is?: string, className?: string) =>
+        [
+            tagName.toLowerCase(),
+            className && `.${className.trim().replace(/\s+/, '.')}`,
+            is && `[is="${is}"]`
+        ]
+            .filter(Boolean)
+            .join('');
 
     get selector() {
-        const { tagName, props } = this;
+        const { tagName, is, props } = this;
 
-        return tagName && VDOMNode.selectorOf(tagName, props?.className);
+        return tagName && VDOMNode.selectorOf(tagName, is, props?.className);
     }
 
     static propsMap: DataObject = { className: 'class', htmlFor: 'for' };
@@ -46,6 +53,7 @@ export class VDOMNode implements VNode {
         const { tagName, attributes, style, childNodes } = node as HTMLElement;
 
         this.tagName = tagName.toLowerCase();
+        this.is = node.getAttribute('is');
 
         const props = Array.from(
             attributes,
@@ -65,16 +73,14 @@ export class VDOMNode implements VNode {
     }
 }
 
-type HTMLTags = {
-    [tagName in keyof HTMLElementTagNameMap]: HTMLProps<
-        HTMLElementTagNameMap[tagName]
-    >;
-} & {
-    [tagName: string]: HTMLProps<HTMLElement>;
-};
-
 declare global {
     namespace JSX {
-        interface IntrinsicElements extends HTMLTags {}
+        type Element = VNode;
+
+        type IntrinsicElements = {
+            [tagName in keyof HTMLElementTagNameMap]: HTMLProps<
+                HTMLElementTagNameMap[tagName]
+            >;
+        };
     }
 }

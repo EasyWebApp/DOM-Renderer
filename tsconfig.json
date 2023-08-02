@@ -12,7 +12,8 @@
         "name": "DOM Renderer",
         "excludeExternals": true,
         "excludePrivate": true,
-        "readme": "./ReadMe.md",
+        "readme": "ReadMe.md",
+        "entryPoints": ["source/dist/index.ts", "source/jsx-runtime.ts"],
         "plugin": ["typedoc-plugin-mdn-links"]
     }
 }

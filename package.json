@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.0.0-rc.3",
+    "version": "2.0.0-rc.4",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -59,8 +59,8 @@
         "prepare": "husky install",
         "test": "lint-staged  &&  jest",
         "parcel": "tsc -p tsconfig.json  &&  mv dist/jsx-runtime.* .  &&  mv dist/dist/* dist/  &&  rm -rf dist/dist",
-        "build": "rm -rf dist/ docs/  &&  typedoc source/dist/  &&  npm run parcel",
-        "start": "typedoc source/  &&  open-cli docs/index.html",
+        "build": "rm -rf dist/ docs/  &&  typedoc  &&  npm run parcel",
+        "start": "typedoc  &&  open-cli docs/index.html",
         "prepublishOnly": "npm test  &&  npm run build"
     }
 }

@@ -56,7 +56,7 @@ console.log(newVNode);
 ```tsx
 import { DOMRenderer } from 'dom-renderer';
 
-const newVNode = new DOMRenderer().renderer(
+const newVNode = new DOMRenderer().render(
     <a href="https://idea2.app/" style={{ color: 'red' }}>
         idea2app
     </a>

@@ -8,25 +8,32 @@ import { DataObject, VDOMNode, VNode } from './dist/VDOM';
  */
 export function jsx(
     type: string | Function,
-    { style, children, ...props }: DataObject,
+    { is, style, children, ...props }: DataObject,
     key?: IndexKey
 ): VNode {
     if (typeof type === 'function' && isHTMLElementClass(type))
         type = tagNameOf(type);
 
+    children = (
+        children instanceof Array ? children : children && [children]
+    )?.map(node =>
+        node instanceof Object
+            ? node
+            : node === 0 || node
+            ? { text: node + '' }
+            : { text: '' }
+    );
     return typeof type === 'string'
         ? {
               key,
-              selector: VDOMNode.selectorOf(type, props.className),
+              selector: VDOMNode.selectorOf(type, is, props.className),
               tagName: type,
+              is,
               props,
               style,
-              children: (children instanceof Array
-                  ? children
-                  : children && [children]
-              )?.map(node => (typeof node === 'string' ? { text: node } : node))
+              children
           }
-        : type({ style, children, ...props });
+        : type({ is, style, children, ...props });
 }
 
 export const jsxs = jsx;

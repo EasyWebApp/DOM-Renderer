@@ -1,15 +1,31 @@
-import { diffKeys, DiffStatus } from 'web-utility';
+import {
+    diffKeys,
+    DiffStatus,
+    elementTypeOf,
+    isDOMReadOnly,
+    templateOf,
+    toCamelCase,
+    toHyphenCase
+} from 'web-utility';
 
 import { DataObject, VDOMNode, VNode } from './VDOM';
 
 export class DOMRenderer {
-    eventPattern = /^on\w+/;
+    eventPattern = /^on[A-Z]/;
+    ariaPattern = /^aira[A-Z]/;
 
     protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
         key || props?.id || text || (selector && selector + index);
 
     protected vNodeOf = (list: VNode[], key: string) =>
         list.find((vNode, index) => this.keyOf(vNode, index) + '' === key);
+
+    protected propsKeyOf = (key: string) =>
+        key.startsWith('aria-')
+            ? toCamelCase(key)
+            : this.eventPattern.test(key)
+            ? key.toLowerCase()
+            : key;
 
     protected updateProps<T extends DataObject>(
         node: T,
@@ -39,7 +55,7 @@ export class DOMRenderer {
             return (vNode.node = document.createTextNode(vNode.text));
 
         vNode.node = vNode.tagName
-            ? document.createElement(vNode.tagName)
+            ? document.createElement(vNode.tagName, { is: vNode.is })
             : document.createDocumentFragment();
 
         return this.patch({ tagName: vNode.tagName, node: vNode.node }, vNode)
@@ -72,6 +88,9 @@ export class DOMRenderer {
     }
 
     patch(oldVNode: VNode, newVNode: VNode): VNode {
+        const { tagName } = oldVNode;
+        const isXML = templateOf(tagName) && elementTypeOf(tagName) === 'xml';
+
         this.updateProps(
             oldVNode.node as Element,
             oldVNode.props,
@@ -79,10 +98,17 @@ export class DOMRenderer {
             (node, key) =>
                 this.eventPattern.test(key)
                     ? (node[key.toLowerCase()] = null)
-                    : node.removeAttribute(VDOMNode.propsMap[key] || key),
-            (node, key, value) =>
-                (node[this.eventPattern.test(key) ? key.toLowerCase() : key] =
-                    value)
+                    : node.removeAttribute(
+                          this.ariaPattern.test(key)
+                              ? toHyphenCase(key)
+                              : VDOMNode.propsMap[key] || key
+                      ),
+            (node, key, value) => {
+                // @ts-ignore
+                if (isXML || key.includes('-') || isDOMReadOnly(tagName, key))
+                    node.setAttribute(key, value);
+                else node[this.propsKeyOf(key)] = value;
+            }
         );
         this.updateProps(
             (oldVNode.node as HTMLElement).style,
@@ -104,5 +130,13 @@ export class DOMRenderer {
         const root = new VDOMNode(node);
 
         return this.patch(root, { ...root, children: [vNode] });
+    }
+
+    renderToStaticMarkup(tree: VNode) {
+        const { body } = document.implementation.createHTMLDocument();
+
+        this.render(tree, body);
+
+        return body.innerHTML;
     }
 }
