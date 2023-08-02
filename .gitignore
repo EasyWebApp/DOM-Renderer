@@ -1,8 +1,8 @@
 node_modules/
 package-lock.json
 yarn.lock
-.parcel-cache/
-dist/
-/jsx-runtime.*
+/dist/
+jsx-runtime.d.ts
+jsx-runtime.js
 docs/
 .vscode/settings.json

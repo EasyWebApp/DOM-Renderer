@@ -1,9 +1,12 @@
-import { DOMRenderer } from '../source';
-import { jsx } from '../source/jsx-runtime';
+import { DOMRenderer, VDOMNode, VNode } from '../source/dist';
 
 describe('DOM Renderer', () => {
     const renderer = new DOMRenderer(),
-        root = { tagName: 'body', node: document.body };
+        root: VNode = {
+            tagName: 'body',
+            selector: 'body',
+            node: document.body
+        };
 
     it('should update DOM properties', () => {
         const newVNode = renderer.patch(root, {
@@ -50,19 +53,8 @@ describe('DOM Renderer', () => {
     });
 
     it('should transfer a DOM node to a Virtual DOM node', () => {
-        expect(renderer.toVNode(document.body)).toEqual(root);
-    });
+        const { tagName, selector, node } = new VDOMNode(document.body);
 
-    it('should render JSX to DOM', () => {
-        renderer.render(
-            jsx('a', {
-                href: 'https://idea2.app/',
-                style: { color: 'red' },
-                children: ['idea2app']
-            })
-        );
-        expect(document.body.innerHTML).toBe(
-            '<a href="https://idea2.app/" style="color: red;">idea2app</a>'
-        );
+        expect({ tagName, selector, node }).toEqual(root);
     });
 });

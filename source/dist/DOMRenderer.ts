@@ -1,17 +1,12 @@
 import { diffKeys, DiffStatus } from 'web-utility';
 
-import { DataObject, VNode } from './VDOM';
+import { DataObject, VDOMNode, VNode } from './VDOM';
 
 export class DOMRenderer {
-    propsMap: DataObject = { className: 'class', htmlFor: 'for' };
-
-    attrsMap = Object.fromEntries(
-        Object.entries(this.propsMap).map(item => item.reverse())
-    );
     eventPattern = /^on\w+/;
 
-    protected keyOf = ({ key, text, props }: VNode, index?: number) =>
-        key || props?.id || text || index;
+    protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
+        key || props?.id || text || (selector && selector + index);
 
     protected vNodeOf = (list: VNode[], key: string) =>
         list.find((vNode, index) => this.keyOf(vNode, index) + '' === key);
@@ -43,14 +38,12 @@ export class DOMRenderer {
         if (vNode.text)
             return (vNode.node = document.createTextNode(vNode.text));
 
-        if (vNode.tagName) {
-            vNode.node = document.createElement(vNode.tagName);
+        vNode.node = vNode.tagName
+            ? document.createElement(vNode.tagName)
+            : document.createDocumentFragment();
 
-            return this.patch(
-                { tagName: vNode.tagName, node: vNode.node },
-                vNode
-            ).node;
-        }
+        return this.patch({ tagName: vNode.tagName, node: vNode.node }, vNode)
+            .node;
     }
 
     protected updateChildren(
@@ -66,19 +59,14 @@ export class DOMRenderer {
         for (const [key] of group[DiffStatus.Old] || [])
             (this.vNodeOf(oldList, key)?.node as ChildNode)?.remove();
 
-        const newNodes = newList
-            .map((vNode, index) => {
-                const key = this.keyOf(vNode, index);
+        const newNodes = newList.map((vNode, index) => {
+            const key = this.keyOf(vNode, index);
 
-                switch (map[key]) {
-                    case DiffStatus.New:
-                        return this.createNode(vNode);
-                    case DiffStatus.Same:
-                        return this.patch(this.vNodeOf(oldList, key)!, vNode)
-                            .node;
-                }
-            })
-            .filter(Boolean) as Node[];
+            if (map[key] === DiffStatus.Same)
+                return this.patch(this.vNodeOf(oldList, key)!, vNode).node;
+
+            return this.createNode(vNode);
+        });
 
         node.append(...newNodes);
     }
@@ -91,7 +79,7 @@ export class DOMRenderer {
             (node, key) =>
                 this.eventPattern.test(key)
                     ? (node[key.toLowerCase()] = null)
-                    : node.removeAttribute(this.propsMap[key] || key),
+                    : node.removeAttribute(VDOMNode.propsMap[key] || key),
             (node, key, value) =>
                 (node[this.eventPattern.test(key) ? key.toLowerCase() : key] =
                     value)
@@ -112,36 +100,8 @@ export class DOMRenderer {
         return newVNode;
     }
 
-    toVNode = (node: Node): VNode => {
-        if (node instanceof Text) return { node, text: node.nodeValue };
-
-        if (!(node instanceof Element)) return;
-
-        const { tagName, attributes, style, childNodes } = node as HTMLElement;
-
-        const vNode: VNode = { node, tagName: tagName.toLowerCase() };
-
-        const props = Array.from(
-            attributes,
-            ({ name, value }) =>
-                name !== 'style' && [this.attrsMap[name] || name, value]
-        ).filter(Boolean);
-
-        if (props[0]) vNode.props = Object.fromEntries(props);
-
-        const styles = Array.from(style, key => [key, style[key]]);
-
-        if (styles[0]) vNode.style = Object.fromEntries(styles);
-
-        const children = Array.from(childNodes, this.toVNode).filter(Boolean);
-
-        if (children[0]) vNode.children = children;
-
-        return vNode;
-    };
-
     render(vNode: VNode, node: Element = document.body) {
-        const root = this.toVNode(node);
+        const root = new VDOMNode(node);
 
         return this.patch(root, { ...root, children: [vNode] });
     }

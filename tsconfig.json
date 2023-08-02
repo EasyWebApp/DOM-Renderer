@@ -7,7 +7,7 @@
         "declaration": true,
         "outDir": "dist"
     },
-    "include": ["source/*.ts"],
+    "include": ["source/**/*.ts"],
     "typedocOptions": {
         "name": "DOM Renderer",
         "excludeExternals": true,

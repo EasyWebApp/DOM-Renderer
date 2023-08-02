@@ -38,6 +38,8 @@ console.log(newVNode);
 
 ### TypeScript
 
+[![Edit DOM Renderer example](https://codesandbox.io/static/img/play-codesandbox.svg)][6]
+
 #### `tsconfig.json`
 
 ```json
@@ -67,16 +69,17 @@ console.log(newVNode);
 
 ### Inspiration
 
-[![SnabbDOM](https://github.com/snabbdom.png)][6]
+[![SnabbDOM](https://github.com/snabbdom.png)][7]
 
 ### Prototype
 
-[![Edit DOM renderer](https://codesandbox.io/static/img/play-codesandbox.svg)][7]
+[![Edit DOM Renderer](https://codesandbox.io/static/img/play-codesandbox.svg)][8]
 
 [1]: https://www.webcomponents.org/
 [2]: https://www.typescriptlang.org/
 [3]: https://github.com/EasyWebApp/DOM-Renderer/actions/workflows/main.yml
 [4]: https://gitpod.io/#https://github.com/EasyWebApp/DOM-Renderer
 [5]: https://nodei.co/npm/dom-renderer/
-[6]: https://github.com/snabbdom/snabbdom
-[7]: https://codesandbox.io/s/dom-renderer-pglxkx?autoresize=1&expanddevtools=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.ts&theme=dark
+[6]: https://codesandbox.io/s/dom-renderer-example-pmcsvs?autoresize=1&expanddevtools=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.tsx&theme=dark
+[7]: https://github.com/snabbdom/snabbdom
+[8]: https://codesandbox.io/s/dom-renderer-pglxkx?autoresize=1&expanddevtools=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.ts&theme=dark

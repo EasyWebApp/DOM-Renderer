@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.0.0-beta.6",
+    "version": "2.0.0-rc.3",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -20,18 +20,14 @@
     "bugs": {
         "url": "https://github.com/EasyWebApp/DOM-Renderer/issues"
     },
-    "source": "source/index.ts",
+    "source": "source/dist/index.ts",
     "types": "dist/index.d.ts",
-    "module": "dist/index.esm.js",
     "main": "dist/index.js",
     "dependencies": {
-        "@swc/helpers": "~0.4.14",
         "tslib": "^2.6.1",
         "web-utility": "^4.1.0"
     },
     "devDependencies": {
-        "@parcel/packager-ts": "~2.8.3",
-        "@parcel/transformer-typescript-types": "~2.8.3",
         "@types/jest": "^29.5.3",
         "@types/node": "^18.17.1",
         "husky": "^8.0.3",
@@ -39,7 +35,6 @@
         "jest-environment-jsdom": "^29.6.2",
         "lint-staged": "^13.2.3",
         "open-cli": "^7.2.0",
-        "parcel": "~2.8.3",
         "prettier": "^3.0.0",
         "ts-jest": "^29.1.1",
         "typedoc": "^0.24.8",
@@ -60,18 +55,11 @@
         "testEnvironment": "jsdom"
     },
     "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
-    "targets": {
-        "types": false,
-        "main": {
-            "optimize": true
-        }
-    },
     "scripts": {
         "prepare": "husky install",
         "test": "lint-staged  &&  jest",
-        "pack-jsx": "tsc -p tsconfig.json  &&  mv dist/jsx-runtime.* .  &&  rm dist/*.js",
-        "parcel": "npm run pack-jsx  &&  parcel build",
-        "build": "rm -rf dist/ docs/  &&  typedoc source/  &&  npm run parcel",
+        "parcel": "tsc -p tsconfig.json  &&  mv dist/jsx-runtime.* .  &&  mv dist/dist/* dist/  &&  rm -rf dist/dist",
+        "build": "rm -rf dist/ docs/  &&  typedoc source/dist/  &&  npm run parcel",
         "start": "typedoc source/  &&  open-cli docs/index.html",
         "prepublishOnly": "npm test  &&  npm run build"
     }
