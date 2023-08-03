@@ -91,6 +91,16 @@ describe('JSX runtime', () => {
         expect(onClick).toBeCalledTimes(1);
     });
 
+    it('should pass a real DOM Node by a callback', () => {
+        const ref = jest.fn();
+
+        renderer.render(jsx('b', { ref }));
+
+        expect(document.body.innerHTML).toBe('<b></b>');
+
+        expect(ref).toBeCalledWith(document.body.firstChild);
+    });
+
     it('should render to a Static String', () => {
         expect(renderer.renderToStaticMarkup(jsx('i', {}))).toBe('<i></i>');
     });

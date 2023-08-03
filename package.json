@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.0.0-rc.4",
+    "version": "2.0.0-rc.5",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -35,7 +35,7 @@
         "jest-environment-jsdom": "^29.6.2",
         "lint-staged": "^13.2.3",
         "open-cli": "^7.2.0",
-        "prettier": "^3.0.0",
+        "prettier": "^3.0.1",
         "ts-jest": "^29.1.1",
         "typedoc": "^0.24.8",
         "typedoc-plugin-mdn-links": "^3.0.3",

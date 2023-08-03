@@ -1,4 +1,4 @@
-import { DOMRenderer, VDOMNode, VNode } from '../source/dist';
+import { DOMRenderer, VNode } from '../source/dist';
 
 describe('DOM Renderer', () => {
     const renderer = new DOMRenderer(),
@@ -23,7 +23,7 @@ describe('DOM Renderer', () => {
     it('should update DOM styles', () => {
         const newVNode = renderer.patch(root, {
             ...root,
-            style: { margin: 0 }
+            style: { margin: '0' }
         });
         expect(document.body.style.margin).toBe('0px');
 
@@ -53,7 +53,7 @@ describe('DOM Renderer', () => {
     });
 
     it('should transfer a DOM node to a Virtual DOM node', () => {
-        const { tagName, selector, node } = new VDOMNode(document.body);
+        const { tagName, selector, node } = VNode.fromDOM(document.body);
 
         expect({ tagName, selector, node }).toEqual(root);
     });

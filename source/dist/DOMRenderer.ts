@@ -8,17 +8,21 @@ import {
     toHyphenCase
 } from 'web-utility';
 
-import { DataObject, VDOMNode, VNode } from './VDOM';
+import { DataObject, VNode } from './VDOM';
 
 export class DOMRenderer {
     eventPattern = /^on[A-Z]/;
     ariaPattern = /^aira[A-Z]/;
 
-    protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
-        key || props?.id || text || (selector && selector + index);
+    protected treeCache = new WeakMap<Node, VNode>();
 
-    protected vNodeOf = (list: VNode[], key: string) =>
-        list.find((vNode, index) => this.keyOf(vNode, index) + '' === key);
+    protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
+        key?.toString() || props?.id || text || (selector && selector + index);
+
+    protected vNodeOf = (list: VNode[], key?: VNode['key']) =>
+        list.find(
+            (vNode, index) => `${this.keyOf(vNode, index)}` === String(key)
+        );
 
     protected propsKeyOf = (key: string) =>
         key.startsWith('aria-')
@@ -27,12 +31,12 @@ export class DOMRenderer {
             ? key.toLowerCase()
             : key;
 
-    protected updateProps<T extends DataObject>(
-        node: T,
-        oldProps: DataObject = {},
-        newProps: DataObject = {},
-        onDelete?: (node: T, key: string) => any,
-        onAdd?: (node: T, key: string, value: any) => any
+    protected updateProps<N extends DataObject, P extends DataObject>(
+        node: N,
+        oldProps = {} as P,
+        newProps = {} as P,
+        onDelete?: (node: N, key: string) => any,
+        onAdd?: (node: N, key: string, value: any) => any
     ) {
         const { group } = diffKeys(
             Object.keys(oldProps),
@@ -58,8 +62,19 @@ export class DOMRenderer {
             ? document.createElement(vNode.tagName, { is: vNode.is })
             : document.createDocumentFragment();
 
-        return this.patch({ tagName: vNode.tagName, node: vNode.node }, vNode)
-            .node;
+        const { node } = this.patch(
+            { tagName: vNode.tagName, node: vNode.node },
+            vNode
+        );
+        if (node) vNode.ref?.(node);
+
+        return node;
+    }
+
+    deleteNode({ node, children }: VNode) {
+        if (node instanceof DocumentFragment)
+            children?.forEach(this.deleteNode);
+        else (node as ChildNode)?.remove();
     }
 
     protected updateChildren(
@@ -73,7 +88,7 @@ export class DOMRenderer {
         );
 
         for (const [key] of group[DiffStatus.Old] || [])
-            (this.vNodeOf(oldList, key)?.node as ChildNode)?.remove();
+            this.deleteNode(this.vNodeOf(oldList, key));
 
         const newNodes = newList.map((vNode, index) => {
             const key = this.keyOf(vNode, index);
@@ -101,7 +116,7 @@ export class DOMRenderer {
                     : node.removeAttribute(
                           this.ariaPattern.test(key)
                               ? toHyphenCase(key)
-                              : VDOMNode.propsMap[key] || key
+                              : VNode.propsMap[key] || key
                       ),
             (node, key, value) => {
                 // @ts-ignore
@@ -127,9 +142,13 @@ export class DOMRenderer {
     }
 
     render(vNode: VNode, node: Element = document.body) {
-        const root = new VDOMNode(node);
+        var root = this.treeCache.get(node) || VNode.fromDOM(node);
 
-        return this.patch(root, { ...root, children: [vNode] });
+        root = this.patch(root, { ...root, children: [vNode] });
+
+        this.treeCache.set(node, root);
+
+        return root;
     }
 
     renderToStaticMarkup(tree: VNode) {

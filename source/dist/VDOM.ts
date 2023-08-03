@@ -2,85 +2,91 @@ import { HTMLProps, IndexKey } from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
-export interface VNode {
+export class VNode {
     key?: IndexKey;
+    ref?: (node: Node) => any;
     text?: string;
     selector?: string;
     tagName?: string;
     is?: string;
     props?: DataObject;
-    style?: DataObject;
+    style?: HTMLProps<HTMLElement>['style'];
     children?: VNode[];
     node?: Node;
-}
 
-export class VDOMNode implements VNode {
-    text?: string;
-    tagName?: string;
-    is?: string;
-    props?: DataObject;
-    style?: DataObject;
-    children?: VNode[];
+    constructor(meta: VNode) {
+        Object.assign(this, meta);
 
-    static selectorOf = (tagName: string, is?: string, className?: string) =>
-        [
-            tagName.toLowerCase(),
-            className && `.${className.trim().replace(/\s+/, '.')}`,
+        const { tagName, is, props } = meta;
+
+        if (!tagName && !props?.className && !is) return;
+
+        this.selector = [
+            tagName?.toLowerCase(),
+            props?.className &&
+                `.${props.className.trim().replace(/\s+/, '.')}`,
             is && `[is="${is}"]`
         ]
             .filter(Boolean)
             .join('');
-
-    get selector() {
-        const { tagName, is, props } = this;
-
-        return tagName && VDOMNode.selectorOf(tagName, is, props?.className);
     }
 
-    static propsMap: DataObject = { className: 'class', htmlFor: 'for' };
+    static propsMap: Partial<
+        Record<keyof HTMLProps<HTMLLabelElement>, string>
+    > = {
+        className: 'class',
+        htmlFor: 'for'
+    };
 
-    static attrsMap = Object.fromEntries(
-        Object.entries(this.propsMap).map(item => item.reverse())
-    );
+    static attrsMap: Record<string, keyof HTMLProps<HTMLLabelElement>> =
+        Object.fromEntries(
+            Object.entries(this.propsMap).map(item => item.reverse())
+        );
 
-    constructor(public node: Node) {
-        if (node instanceof Text) {
-            this.text = node.nodeValue;
-            return;
-        }
-        if (!(node instanceof Element)) return;
+    static fromDOM(node: Node) {
+        if (node instanceof Text)
+            return new VNode({ node, text: node.nodeValue });
+
+        if (!(node instanceof Element)) return new VNode({ node });
 
         const { tagName, attributes, style, childNodes } = node as HTMLElement;
-
-        this.tagName = tagName.toLowerCase();
-        this.is = node.getAttribute('is');
-
+        const vNode: VNode = {
+            node,
+            tagName: tagName.toLowerCase(),
+            is: node.getAttribute('is')
+        };
         const props = Array.from(
             attributes,
             ({ name, value }) =>
-                name !== 'style' && [VDOMNode.attrsMap[name] || name, value]
+                name !== 'style' && [this.attrsMap[name] || name, value]
         ).filter(Boolean);
 
-        if (props[0]) this.props = Object.fromEntries(props);
+        if (props[0]) vNode.props = Object.fromEntries(props);
 
         const styles = Array.from(style, key => [key, style[key]]);
 
-        if (styles[0]) this.style = Object.fromEntries(styles);
+        if (styles[0]) vNode.style = Object.fromEntries(styles);
 
-        const children = Array.from(childNodes, node => new VDOMNode(node));
+        const children = Array.from(childNodes, node => VNode.fromDOM(node));
 
-        if (children[0]) this.children = children;
+        if (children[0]) vNode.children = children;
+
+        return new VNode(vNode);
     }
 }
 
 declare global {
+    /**
+     * @see {@link https://www.typescriptlang.org/docs/handbook/jsx.html}
+     */
     namespace JSX {
         type Element = VNode;
 
         type IntrinsicElements = {
             [tagName in keyof HTMLElementTagNameMap]: HTMLProps<
                 HTMLElementTagNameMap[tagName]
-            >;
+            > &
+                Pick<VNode, 'is' | 'key' | 'ref'>;
         };
     }
 }

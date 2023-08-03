@@ -1,6 +1,6 @@
 import { IndexKey, isHTMLElementClass, tagNameOf } from 'web-utility';
 
-import { DataObject, VDOMNode, VNode } from './dist/VDOM';
+import { DataObject, VNode } from './dist/VDOM';
 
 /**
  * @see {@link https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md}
@@ -8,7 +8,7 @@ import { DataObject, VDOMNode, VNode } from './dist/VDOM';
  */
 export function jsx(
     type: string | Function,
-    { is, style, children, ...props }: DataObject,
+    { ref, is, style, children, ...props }: DataObject,
     key?: IndexKey
 ): VNode {
     if (typeof type === 'function' && isHTMLElementClass(type))
@@ -20,20 +20,14 @@ export function jsx(
         node instanceof Object
             ? node
             : node === 0 || node
-            ? { text: node + '' }
-            : { text: '' }
+            ? new VNode({ text: node.toString() })
+            : new VNode({ text: '' })
     );
+    const commonProps: VNode = { key, ref, is, style, children };
+
     return typeof type === 'string'
-        ? {
-              key,
-              selector: VDOMNode.selectorOf(type, is, props.className),
-              tagName: type,
-              is,
-              props,
-              style,
-              children
-          }
-        : type({ is, style, children, ...props });
+        ? new VNode({ ...commonProps, tagName: type, props })
+        : type({ ...commonProps, ...props });
 }
 
 export const jsxs = jsx;
@@ -42,11 +36,11 @@ export const jsxs = jsx;
  * @see {@link https://babeljs.io/docs/babel-plugin-transform-react-jsx#react-automatic-runtime-1}
  */
 export const Fragment = ({
+    key,
+    ref,
+    is,
     style,
     children,
     ...props
-}: VNode['props'] & Pick<VNode, 'style' | 'children'>): VNode => ({
-    props,
-    style,
-    children
-});
+}: VNode['props'] & Omit<VNode, 'props'>) =>
+    new VNode({ key, ref, is, props, style, children });
