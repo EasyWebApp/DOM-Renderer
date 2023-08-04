@@ -2,7 +2,7 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "importHelpers": true,
-        "lib": ["ES2023", "DOM"],
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
         "declaration": true,
         "outDir": "dist"

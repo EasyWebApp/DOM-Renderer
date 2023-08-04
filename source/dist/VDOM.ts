@@ -5,6 +5,7 @@ export type DataObject = Record<string, any>;
 export class VNode {
     key?: IndexKey;
     ref?: (node: Node) => any;
+    unRef?: (node: Node) => any;
     text?: string;
     selector?: string;
     tagName?: string;

@@ -8,22 +8,20 @@ import { DataObject, VNode } from './dist/VDOM';
  */
 export function jsx(
     type: string | Function,
-    { ref, is, style, children, ...props }: DataObject,
+    { ref, unRef, is, style, children, ...props }: DataObject,
     key?: IndexKey
 ): VNode {
     if (typeof type === 'function' && isHTMLElementClass(type))
         type = tagNameOf(type);
 
-    children = (
-        children instanceof Array ? children : children && [children]
-    )?.map(node =>
+    children = (children instanceof Array ? children : [children])?.map(node =>
         node instanceof Object
             ? node
             : node === 0 || node
             ? new VNode({ text: node.toString() })
             : new VNode({ text: '' })
     );
-    const commonProps: VNode = { key, ref, is, style, children };
+    const commonProps: VNode = { key, ref, unRef, is, style, children };
 
     return typeof type === 'string'
         ? new VNode({ ...commonProps, tagName: type, props })

@@ -91,14 +91,49 @@ describe('JSX runtime', () => {
         expect(onClick).toBeCalledTimes(1);
     });
 
-    it('should pass a real DOM Node by a callback', () => {
+    it('should pass a real DOM Node by callbacks', () => {
         const ref = jest.fn();
 
-        renderer.render(jsx('b', { ref }));
+        renderer.render(jsx('b', { ref, unRef: ref }));
+
+        const { firstChild } = document.body;
 
         expect(document.body.innerHTML).toBe('<b></b>');
 
-        expect(ref).toBeCalledWith(document.body.firstChild);
+        expect(ref).toBeCalledWith(firstChild);
+
+        renderer.render(jsx('a', {}));
+
+        expect(document.body.innerHTML).toBe('<a></a>');
+
+        expect(ref).toBeCalledWith(firstChild);
+    });
+
+    it('should reuse similar DOM nodes', () => {
+        const renderList = (offset = 0) =>
+            renderer.render(
+                jsx('ul', {
+                    children: Array.from(new Array(2), (_, index) => {
+                        const key = String.fromCodePoint(
+                            'a'.charCodeAt(0) + index + offset
+                        );
+                        return jsx('li', { children: [key] }, key);
+                    })
+                })
+            );
+        renderList();
+
+        expect(document.body.innerHTML).toBe('<ul><li>a</li><li>b</li></ul>');
+
+        const { children } = document.body.firstElementChild!;
+
+        renderList(2);
+
+        expect(document.body.innerHTML).toBe('<ul><li>c</li><li>d</li></ul>');
+
+        expect([...document.body.firstElementChild!.children]).toEqual([
+            ...children
+        ]);
     });
 
     it('should render to a Static String', () => {

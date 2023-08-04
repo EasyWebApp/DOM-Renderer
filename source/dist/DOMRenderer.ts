@@ -2,6 +2,7 @@ import {
     diffKeys,
     DiffStatus,
     elementTypeOf,
+    groupBy,
     isDOMReadOnly,
     templateOf,
     toCamelCase,
@@ -17,7 +18,7 @@ export class DOMRenderer {
     protected treeCache = new WeakMap<Node, VNode>();
 
     protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
-        key?.toString() || props?.id || text || (selector && selector + index);
+        key?.toString() || props?.id || (text || selector) + index;
 
     protected vNodeOf = (list: VNode[], key?: VNode['key']) =>
         list.find(
@@ -54,16 +55,20 @@ export class DOMRenderer {
                 else Reflect.set(node, key, newProps[key]);
     }
 
-    protected createNode(vNode: VNode) {
+    protected createNode(vNode: VNode, reusedVNodes?: Record<string, VNode[]>) {
         if (vNode.text)
             return (vNode.node = document.createTextNode(vNode.text));
 
+        const reusedVNode =
+            vNode.selector && reusedVNodes?.[vNode.selector]?.shift();
+
         vNode.node = vNode.tagName
-            ? document.createElement(vNode.tagName, { is: vNode.is })
+            ? reusedVNode?.node ||
+              document.createElement(vNode.tagName, { is: vNode.is })
             : document.createDocumentFragment();
 
         const { node } = this.patch(
-            { tagName: vNode.tagName, node: vNode.node },
+            reusedVNode || { tagName: vNode.tagName, node: vNode.node },
             vNode
         );
         if (node) vNode.ref?.(node);
@@ -71,10 +76,14 @@ export class DOMRenderer {
         return node;
     }
 
-    deleteNode({ node, children }: VNode) {
+    deleteNode({ unRef, node, children }: VNode) {
         if (node instanceof DocumentFragment)
             children?.forEach(this.deleteNode);
-        else (node as ChildNode)?.remove();
+        else if (node) {
+            (node as ChildNode).remove();
+
+            unRef?.(node);
+        }
     }
 
     protected updateChildren(
@@ -86,18 +95,29 @@ export class DOMRenderer {
             oldList.map(this.keyOf),
             newList.map(this.keyOf)
         );
-
-        for (const [key] of group[DiffStatus.Old] || [])
-            this.deleteNode(this.vNodeOf(oldList, key));
-
+        const deletingGroup =
+            group[DiffStatus.Old] &&
+            groupBy(
+                group[DiffStatus.Old].map(([key]) =>
+                    this.vNodeOf(oldList, key)
+                ),
+                ({ selector }) => selector + ''
+            );
         const newNodes = newList.map((vNode, index) => {
             const key = this.keyOf(vNode, index);
 
-            if (map[key] === DiffStatus.Same)
-                return this.patch(this.vNodeOf(oldList, key)!, vNode).node;
+            if (map[key] !== DiffStatus.Same)
+                return this.createNode(vNode, deletingGroup);
 
-            return this.createNode(vNode);
+            const oldVNode = this.vNodeOf(oldList, key)!;
+
+            return vNode.text != null
+                ? (vNode.node = oldVNode.node)
+                : this.patch(oldVNode, vNode).node;
         });
+
+        for (const selector in deletingGroup)
+            for (const vNode of deletingGroup[selector]) this.deleteNode(vNode);
 
         node.append(...newNodes);
     }
