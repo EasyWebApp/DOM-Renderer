@@ -14,12 +14,14 @@ export function jsx(
     if (typeof type === 'function' && isHTMLElementClass(type))
         type = tagNameOf(type);
 
-    children = (children instanceof Array ? children : [children])?.map(node =>
+    children = (
+        children instanceof Array ? children.flat(Infinity) : [children]
+    )?.map(node =>
         node instanceof Object
-            ? node
+            ? new VNode(node)
             : node === 0 || node
-            ? new VNode({ text: node.toString() })
-            : new VNode({ text: '' })
+              ? new VNode({ text: node.toString() })
+              : new VNode({ text: '' })
     );
     const commonProps: VNode = { key, ref, unRef, is, style, children };
 

@@ -7,7 +7,7 @@ A light-weight DOM Renderer supports [Web components][1] standard & [TypeScript]
 
 [![NPM](https://nodei.co/npm/dom-renderer.png?downloads=true&downloadRank=true&stars=true)][5]
 
-[![Open in GitPod](https://img.shields.io/badge/GitPod-dev--now-blue?logo=gitpod)][6]
+[![Open in GitPod](https://gitpod.io/button/open-in-gitpod.svg)][6]
 
 ## Usage
 
@@ -87,7 +87,7 @@ console.log(newVNode);
 [3]: https://libraries.io/npm/dom-renderer
 [4]: https://github.com/EasyWebApp/DOM-Renderer/actions/workflows/main.yml
 [5]: https://nodei.co/npm/dom-renderer/
-[6]: https://gitpod.io/#https://github.com/EasyWebApp/DOM-Renderer
+[6]: https://gitpod.io/?autostart=true#https://github.com/EasyWebApp/DOM-Renderer
 [7]: https://codesandbox.io/s/dom-renderer-example-pmcsvs?autoresize=1&expanddevtools=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.tsx&theme=dark
 [8]: https://codesandbox.io/s/mobx-web-components-pvn9rf?autoresize=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2FWebComponent.ts&moduleview=1&theme=dark
 [9]: https://github.com/snabbdom/snabbdom

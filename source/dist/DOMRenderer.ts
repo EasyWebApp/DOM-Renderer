@@ -18,7 +18,7 @@ export class DOMRenderer {
     protected treeCache = new WeakMap<Node, VNode>();
 
     protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
-        key?.toString() || props?.id || (text || selector) + index;
+        key?.toString() || props?.id || (text || selector || '') + index;
 
     protected vNodeOf = (list: VNode[], key?: VNode['key']) =>
         list.find(
@@ -29,8 +29,8 @@ export class DOMRenderer {
         key.startsWith('aria-')
             ? toCamelCase(key)
             : this.eventPattern.test(key)
-            ? key.toLowerCase()
-            : key;
+              ? key.toLowerCase()
+              : key;
 
     protected updateProps<N extends DataObject, P extends DataObject>(
         node: N,
@@ -76,12 +76,13 @@ export class DOMRenderer {
         return node;
     }
 
-    deleteNode({ unRef, node, children }: VNode) {
+    deleteNode({ ref, unRef, node, children }: VNode) {
         if (node instanceof DocumentFragment)
             children?.forEach(this.deleteNode);
         else if (node) {
             (node as ChildNode).remove();
 
+            ref?.();
             unRef?.(node);
         }
     }
@@ -161,7 +162,7 @@ export class DOMRenderer {
         return newVNode;
     }
 
-    render(vNode: VNode, node: Element = document.body) {
+    render(vNode: VNode, node: ParentNode = document.body) {
         var root = this.treeCache.get(node) || VNode.fromDOM(node);
 
         root = this.patch(root, { ...root, children: [vNode] });

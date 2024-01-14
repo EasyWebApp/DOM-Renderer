@@ -3,3 +3,4 @@ docs/
 .husky/
 .github/
 .vscode/
+.gitpod.yml

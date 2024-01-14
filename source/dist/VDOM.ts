@@ -4,7 +4,10 @@ export type DataObject = Record<string, any>;
 
 export class VNode {
     key?: IndexKey;
-    ref?: (node: Node) => any;
+    ref?: (node?: Node) => any;
+    /**
+     * @deprecated Will be removed in 2.1.0, use `ref(undefined)` instead
+     */
     unRef?: (node: Node) => any;
     text?: string;
     selector?: string;
@@ -76,6 +79,17 @@ export class VNode {
     }
 }
 
+export type JsxChild = VNode | string | number | boolean | null | undefined;
+export type JsxChildren = JsxChild | Array<JsxChildren>;
+
+export type JsxProps<T extends HTMLElement> = Pick<
+    VNode,
+    'is' | 'key' | 'ref'
+> &
+    Omit<HTMLProps<T>, 'children'> & {
+        children?: JsxChildren;
+    };
+
 declare global {
     /**
      * @see {@link https://www.typescriptlang.org/docs/handbook/jsx.html}
@@ -84,10 +98,15 @@ declare global {
         type Element = VNode;
 
         type IntrinsicElements = {
-            [tagName in keyof HTMLElementTagNameMap]: HTMLProps<
+            [tagName in keyof HTMLElementTagNameMap]: JsxProps<
                 HTMLElementTagNameMap[tagName]
-            > &
-                Pick<VNode, 'is' | 'key' | 'ref'>;
+            >;
         };
+        interface ElementAttributesProperty {
+            props: {};
+        }
+        interface ElementChildrenAttribute {
+            children: {};
+        }
     }
 }

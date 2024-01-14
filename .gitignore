@@ -2,7 +2,6 @@ node_modules/
 package-lock.json
 yarn.lock
 /dist/
-jsx-runtime.d.ts
-jsx-runtime.js
+jsx-*runtime.*
 docs/
 .vscode/settings.json

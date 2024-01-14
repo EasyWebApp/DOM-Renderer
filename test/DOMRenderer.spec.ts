@@ -2,17 +2,16 @@ import { DOMRenderer, VNode } from '../source/dist';
 
 describe('DOM Renderer', () => {
     const renderer = new DOMRenderer(),
-        root: VNode = {
-            tagName: 'body',
-            selector: 'body',
-            node: document.body
-        };
+        root = new VNode({ tagName: 'body', node: document.body });
 
     it('should update DOM properties', () => {
-        const newVNode = renderer.patch(root, {
-            ...root,
-            props: { className: 'container' }
-        });
+        const newVNode = renderer.patch(
+            { ...root },
+            {
+                ...root,
+                props: { className: 'container' }
+            }
+        );
         expect(document.body.className).toBe('container');
 
         renderer.patch(newVNode, root);
@@ -21,10 +20,13 @@ describe('DOM Renderer', () => {
     });
 
     it('should update DOM styles', () => {
-        const newVNode = renderer.patch(root, {
-            ...root,
-            style: { margin: '0' }
-        });
+        const newVNode = renderer.patch(
+            { ...root },
+            {
+                ...root,
+                style: { margin: '0' }
+            }
+        );
         expect(document.body.style.margin).toBe('0px');
 
         renderer.patch(newVNode, root);
@@ -33,23 +35,40 @@ describe('DOM Renderer', () => {
     });
 
     it('should update DOM children', () => {
-        const newNode = renderer.patch(root, {
-            ...root,
-            children: [
-                {
-                    tagName: 'a',
-                    props: { href: 'https://idea2.app/' },
-                    style: { color: 'red' },
-                    children: [{ text: 'idea2app' }]
-                }
-            ]
-        });
+        const newNode = renderer.patch(
+            { ...root },
+            {
+                ...root,
+                children: [
+                    new VNode({
+                        tagName: 'a',
+                        props: { href: 'https://idea2.app/' },
+                        style: { color: 'red' },
+                        children: [new VNode({ text: 'idea2app' })]
+                    })
+                ]
+            }
+        );
         expect(document.body.innerHTML).toBe(
             '<a href="https://idea2.app/" style="color: red;">idea2app</a>'
         );
         renderer.patch(newNode, root);
 
         expect(document.body.innerHTML).toBe('');
+    });
+
+    it('should update DOM children without keys', () => {
+        const newNode = renderer.patch(
+            { ...root },
+            { ...root, children: [{ children: [new VNode({ tagName: 'i' })] }] }
+        );
+        expect(document.body.innerHTML).toBe('<i></i>');
+
+        renderer.patch(newNode, {
+            ...root,
+            children: [{ children: [new VNode({ tagName: 'a' })] }]
+        });
+        expect(document.body.innerHTML).toBe('<a></a>');
     });
 
     it('should transfer a DOM node to a Virtual DOM node', () => {

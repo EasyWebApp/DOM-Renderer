@@ -91,22 +91,22 @@ describe('JSX runtime', () => {
         expect(onClick).toBeCalledTimes(1);
     });
 
-    it('should pass a real DOM Node by callbacks', () => {
+    it('should toggle a real DOM Node by callbacks', () => {
         const ref = jest.fn();
 
-        renderer.render(jsx('b', { ref, unRef: ref }));
+        renderer.render(jsx('b', { ref }));
 
         const { firstChild } = document.body;
 
         expect(document.body.innerHTML).toBe('<b></b>');
 
-        expect(ref).toBeCalledWith(firstChild);
+        expect(ref).toHaveBeenCalledWith(firstChild);
 
         renderer.render(jsx('a', {}));
 
         expect(document.body.innerHTML).toBe('<a></a>');
 
-        expect(ref).toBeCalledWith(firstChild);
+        expect(ref).toHaveBeenCalledWith();
     });
 
     it('should reuse similar DOM nodes', () => {
@@ -134,6 +134,29 @@ describe('JSX runtime', () => {
         expect([...document.body.firstElementChild!.children]).toEqual([
             ...children
         ]);
+    });
+
+    it('should not share a real DOM with the same VDOM', () => {
+        const sameVDOM = jsx('a', {});
+
+        renderer.render(
+            jsx(Fragment, {
+                children: [
+                    jsx('nav', { children: [sameVDOM] }),
+                    jsx('nav', { children: [sameVDOM] })
+                ]
+            })
+        );
+        expect(document.body.innerHTML).toBe(
+            '<nav><a></a></nav><nav><a></a></nav>'
+        );
+    });
+
+    it('should handle Nested children arrays', () => {
+        renderer.render(
+            jsx(Fragment, { children: [jsx('nav', {}), [jsx('nav', {})]] })
+        );
+        expect(document.body.innerHTML).toBe('<nav></nav><nav></nav>');
     });
 
     it('should render to a Static String', () => {
