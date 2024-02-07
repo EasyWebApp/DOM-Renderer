@@ -76,15 +76,37 @@ export class DOMRenderer {
         return node;
     }
 
-    deleteNode({ ref, unRef, node, children }: VNode) {
+    protected deleteNode({ ref, node, children }: VNode) {
         if (node instanceof DocumentFragment)
             children?.forEach(this.deleteNode);
         else if (node) {
             (node as ChildNode).remove();
 
             ref?.();
-            unRef?.(node);
         }
+    }
+
+    protected commitChildren(root: ParentNode, newNodes: ChildNode[]) {
+        for (const oldNode of [...root.childNodes]) {
+            const index = newNodes.indexOf(oldNode);
+
+            if (index < 0) {
+                oldNode.remove();
+                continue;
+            } else if (index === 0) {
+                newNodes.shift();
+                continue;
+            }
+            const beforeNodes = newNodes.slice(0, index);
+
+            if (!beforeNodes[0]) continue;
+
+            oldNode.before(...beforeNodes);
+
+            newNodes = newNodes.slice(index + 1);
+        }
+
+        if (newNodes[0]) root.append(...newNodes);
     }
 
     protected updateChildren(
@@ -120,7 +142,7 @@ export class DOMRenderer {
         for (const selector in deletingGroup)
             for (const vNode of deletingGroup[selector]) this.deleteNode(vNode);
 
-        node.append(...newNodes);
+        this.commitChildren(node, newNodes as ChildNode[]);
     }
 
     patch(oldVNode: VNode, newVNode: VNode): VNode {

@@ -5,10 +5,6 @@ export type DataObject = Record<string, any>;
 export class VNode {
     key?: IndexKey;
     ref?: (node?: Node) => any;
-    /**
-     * @deprecated Will be removed in 2.1.0, use `ref(undefined)` instead
-     */
-    unRef?: (node: Node) => any;
     text?: string;
     selector?: string;
     tagName?: string;

@@ -71,6 +71,37 @@ describe('DOM Renderer', () => {
         expect(document.body.innerHTML).toBe('<a></a>');
     });
 
+    it('should not invoke duplicated Connected Callbacks during updating', () => {
+        const connectHook = jest.fn();
+
+        class Test extends HTMLElement {
+            connectedCallback() {
+                connectHook();
+            }
+        }
+        customElements.define('x-test', Test);
+
+        const newNode = renderer.patch(
+            { ...root },
+            {
+                ...root,
+                children: [new VNode({ tagName: 'x-test' })]
+            }
+        );
+        expect(document.body.innerHTML).toBe('<x-test></x-test>');
+
+        renderer.patch(newNode, {
+            ...root,
+            children: [
+                new VNode({ text: 'y' }),
+                new VNode({ tagName: 'x-test' })
+            ]
+        });
+        expect(document.body.innerHTML).toBe('y<x-test></x-test>');
+
+        expect(connectHook).toHaveBeenCalledTimes(1);
+    });
+
     it('should transfer a DOM node to a Virtual DOM node', () => {
         const { tagName, selector, node } = VNode.fromDOM(document.body);
 
