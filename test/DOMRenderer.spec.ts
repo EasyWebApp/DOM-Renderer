@@ -58,17 +58,19 @@ describe('DOM Renderer', () => {
     });
 
     it('should update DOM children without keys', () => {
-        const newNode = renderer.patch(
+        var newNode = renderer.patch(
             { ...root },
             { ...root, children: [{ children: [new VNode({ tagName: 'i' })] }] }
         );
         expect(document.body.innerHTML).toBe('<i></i>');
 
-        renderer.patch(newNode, {
+        newNode = renderer.patch(newNode, {
             ...root,
             children: [{ children: [new VNode({ tagName: 'a' })] }]
         });
         expect(document.body.innerHTML).toBe('<a></a>');
+
+        renderer.patch(newNode, root);
     });
 
     it('should not invoke duplicated Connected Callbacks during updating', () => {

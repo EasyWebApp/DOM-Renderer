@@ -31,6 +31,7 @@ export function jsx(
 }
 
 export const jsxs = jsx;
+export const jsxDEV = jsx;
 
 /**
  * @see {@link https://babeljs.io/docs/babel-plugin-transform-react-jsx#react-automatic-runtime-1}

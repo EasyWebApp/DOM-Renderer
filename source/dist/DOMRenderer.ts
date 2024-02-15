@@ -90,10 +90,8 @@ export class DOMRenderer {
         for (const oldNode of [...root.childNodes]) {
             const index = newNodes.indexOf(oldNode);
 
-            if (index < 0) {
-                oldNode.remove();
-                continue;
-            } else if (index === 0) {
+            if (index < 0) continue;
+            else if (index === 0) {
                 newNodes.shift();
                 continue;
             }
@@ -145,6 +143,19 @@ export class DOMRenderer {
         this.commitChildren(node, newNodes as ChildNode[]);
     }
 
+    handleCustomEvent(node: EventTarget, event: string) {
+        var handler: EventListener;
+
+        Object.defineProperty(node, `on${event}`, {
+            set: value => {
+                if (handler) node.removeEventListener(event, handler);
+
+                node.addEventListener(event, (handler = value));
+            },
+            get: () => handler
+        });
+    }
+
     patch(oldVNode: VNode, newVNode: VNode): VNode {
         const { tagName } = oldVNode;
         const isXML = templateOf(tagName) && elementTypeOf(tagName) === 'xml';
@@ -162,10 +173,18 @@ export class DOMRenderer {
                               : VNode.propsMap[key] || key
                       ),
             (node, key, value) => {
-                // @ts-ignore
-                if (isXML || key.includes('-') || isDOMReadOnly(tagName, key))
-                    node.setAttribute(key, value);
-                else node[this.propsKeyOf(key)] = value;
+                if (isXML || key.includes('-')) node.setAttribute(key, value);
+                else
+                    try {
+                        const name = this.propsKeyOf(key);
+
+                        if (this.eventPattern.test(key) && !(name in node))
+                            this.handleCustomEvent(node, name.slice(2));
+
+                        node[name] = value;
+                    } catch {
+                        node.setAttribute(key, value);
+                    }
             }
         );
         this.updateProps(

@@ -78,10 +78,8 @@ export class VNode {
 export type JsxChild = VNode | string | number | boolean | null | undefined;
 export type JsxChildren = JsxChild | Array<JsxChildren>;
 
-export type JsxProps<T extends HTMLElement> = Pick<
-    VNode,
-    'is' | 'key' | 'ref'
-> &
+export type JsxProps<T extends HTMLElement> = DataObject &
+    Pick<VNode, 'is' | 'key' | 'ref'> &
     Omit<HTMLProps<T>, 'children'> & {
         children?: JsxChildren;
     };
@@ -93,11 +91,13 @@ declare global {
     namespace JSX {
         type Element = VNode;
 
-        type IntrinsicElements = {
+        type JSXElements = {
             [tagName in keyof HTMLElementTagNameMap]: JsxProps<
                 HTMLElementTagNameMap[tagName]
             >;
         };
+        interface IntrinsicElements extends JSXElements {}
+
         interface ElementAttributesProperty {
             props: {};
         }
