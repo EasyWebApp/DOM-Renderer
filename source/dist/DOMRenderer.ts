@@ -206,7 +206,7 @@ export class DOMRenderer {
     render(vNode: VNode, node: ParentNode = document.body) {
         var root = this.treeCache.get(node) || VNode.fromDOM(node);
 
-        root = this.patch(root, { ...root, children: [vNode] });
+        root = this.patch(root, new VNode({ ...root, children: [vNode] }));
 
         this.treeCache.set(node, root);
 

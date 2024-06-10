@@ -104,9 +104,17 @@ describe('DOM Renderer', () => {
         expect(connectHook).toHaveBeenCalledTimes(1);
     });
 
-    it('should transfer a DOM node to a Virtual DOM node', () => {
-        const { tagName, selector, node } = VNode.fromDOM(document.body);
+    it('should render a Virtual DOM node to a Shadow Root', () => {
+        const shadowRoot = document
+            .createElement('div')
+            .attachShadow({ mode: 'open' });
 
-        expect({ tagName, selector, node }).toEqual(root);
+        const shadowVDOM = renderer.patch(
+            VNode.fromDOM(shadowRoot),
+            new VNode({ children: [new VNode({ tagName: 'a' })] })
+        );
+        expect(VNode.isFragment(shadowVDOM)).toBe(true);
+
+        expect(shadowRoot.innerHTML).toBe('<a></a>');
     });
 });

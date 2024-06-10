@@ -1,4 +1,4 @@
-import { IndexKey, isHTMLElementClass, tagNameOf } from 'web-utility';
+import { IndexKey, isEmpty, isHTMLElementClass, tagNameOf } from 'web-utility';
 
 import { DataObject, VNode } from './dist/VDOM';
 
@@ -44,4 +44,11 @@ export const Fragment = ({
     children,
     ...props
 }: VNode['props'] & Omit<VNode, 'props'>) =>
-    new VNode({ key, ref, is, props, style, children });
+    new VNode({
+        key,
+        ref,
+        is,
+        props: isEmpty(props) ? undefined : props,
+        style,
+        children
+    });

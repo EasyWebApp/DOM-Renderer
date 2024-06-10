@@ -1,4 +1,4 @@
-import { HTMLProps, IndexKey } from 'web-utility';
+import { HTMLProps, IndexKey, isEmpty } from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
@@ -14,8 +14,16 @@ export class VNode {
     children?: VNode[];
     node?: Node;
 
-    constructor(meta: VNode) {
+    constructor({ children, ...meta }: VNode) {
         Object.assign(this, meta);
+
+        for (const vNode of children || [])
+            if (VNode.isFragment(vNode))
+                this.children = [
+                    ...(this.children || []),
+                    ...(vNode.children || [])
+                ];
+            else this.children = [...(this.children || []), vNode];
 
         const { tagName, is, props } = meta;
 
@@ -42,6 +50,11 @@ export class VNode {
         Object.fromEntries(
             Object.entries(this.propsMap).map(item => item.reverse())
         );
+
+    static isFragment({ key, node, children, ...rest }: VNode) {
+        for (const key in rest) if (!isEmpty(rest[key])) return false;
+        return true;
+    }
 
     static fromDOM(node: Node) {
         if (node instanceof Text)
