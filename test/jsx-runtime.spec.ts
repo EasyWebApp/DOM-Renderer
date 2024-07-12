@@ -1,3 +1,5 @@
+import 'declarative-shadow-dom-polyfill';
+
 import { DOMRenderer } from '../source/dist';
 import { jsx, Fragment } from '../source/jsx-runtime';
 

@@ -1,4 +1,8 @@
+import 'declarative-shadow-dom-polyfill';
+
 import { DOMRenderer, VNode } from '../source/dist';
+
+globalThis.CDATASection = class extends Text {};
 
 describe('DOM Renderer', () => {
     const renderer = new DOMRenderer(),
@@ -116,5 +120,22 @@ describe('DOM Renderer', () => {
         expect(VNode.isFragment(shadowVDOM)).toBe(true);
 
         expect(shadowRoot.innerHTML).toBe('<a></a>');
+    });
+
+    it('should render the Shadow Root to HTML strings', () => {
+        class ShadowRootTag extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'closed' }).innerHTML = '<a></a>';
+            }
+        }
+        customElements.define('shadow-root-tag', ShadowRootTag);
+
+        const markup = renderer.renderToStaticMarkup(
+            new VNode({ tagName: 'shadow-root-tag' })
+        );
+        expect(markup).toBe(
+            `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
+        );
     });
 });
