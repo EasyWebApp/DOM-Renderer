@@ -14,15 +14,17 @@ export function jsx(
     if (typeof type === 'function' && isHTMLElementClass(type))
         type = tagNameOf(type);
 
-    children = (
-        children instanceof Array ? children.flat(Infinity) : [children]
-    )?.map(node =>
-        node instanceof Object
-            ? new VNode(node)
-            : node === 0 || node
-              ? new VNode({ text: node.toString() })
-              : new VNode({ text: '' })
-    );
+    children = [children]
+        .flat(Infinity)
+        .map(node =>
+            node instanceof Object
+                ? new VNode(node)
+                : node === 0 || node
+                  ? new VNode({ text: node.toString() })
+                  : undefined
+        )
+        .filter(Boolean);
+
     const commonProps: VNode = { key, ref, is, style, children };
 
     return typeof type === 'string'

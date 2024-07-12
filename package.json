@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.1.7",
+    "version": "2.2.0",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -28,18 +28,19 @@
         "web-utility": "^4.4.0"
     },
     "devDependencies": {
+        "@happy-dom/jest-environment": "^14.12.3",
         "@types/jest": "^29.5.12",
-        "@types/node": "^18.19.34",
+        "@types/node": "^18.19.39",
+        "declarative-shadow-dom-polyfill": "^0.3.2",
         "husky": "^9.0.11",
         "jest": "^29.7.0",
-        "jest-environment-jsdom": "^29.7.0",
-        "lint-staged": "^15.2.5",
+        "lint-staged": "^15.2.7",
         "open-cli": "^8.0.0",
-        "prettier": "^3.3.1",
-        "ts-jest": "^29.1.4",
-        "typedoc": "^0.25.13",
-        "typedoc-plugin-mdn-links": "^3.1.29",
-        "typescript": "~5.4.5"
+        "prettier": "^3.3.2",
+        "ts-jest": "^29.2.2",
+        "typedoc": "^0.26.4",
+        "typedoc-plugin-mdn-links": "^3.2.3",
+        "typescript": "~5.5.3"
     },
     "prettier": {
         "singleQuote": true,
@@ -52,7 +53,7 @@
     },
     "jest": {
         "preset": "ts-jest",
-        "testEnvironment": "jsdom"
+        "testEnvironment": "@happy-dom/jest-environment"
     },
     "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
     "scripts": {

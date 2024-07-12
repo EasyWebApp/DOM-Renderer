@@ -1,9 +1,9 @@
+import type {} from 'declarative-shadow-dom-polyfill';
 import {
     diffKeys,
     DiffStatus,
     elementTypeOf,
     groupBy,
-    isDOMReadOnly,
     templateOf,
     toCamelCase,
     toHyphenCase
@@ -11,9 +11,22 @@ import {
 
 import { DataObject, VNode } from './VDOM';
 
+const { attachShadow } = HTMLElement.prototype,
+    shadowDOMs = new WeakMap<Element, ShadowRoot>();
+
+HTMLElement.prototype.attachShadow = function (options: ShadowRootInit) {
+    const shadowRoot = attachShadow.call(this, options);
+
+    shadowDOMs.set(this, shadowRoot);
+
+    return shadowRoot;
+};
+
 export class DOMRenderer {
     eventPattern = /^on[A-Z]/;
     ariaPattern = /^aira[A-Z]/;
+
+    document = globalThis.document;
 
     protected treeCache = new WeakMap<Node, VNode>();
 
@@ -57,15 +70,15 @@ export class DOMRenderer {
 
     protected createNode(vNode: VNode, reusedVNodes?: Record<string, VNode[]>) {
         if (vNode.text)
-            return (vNode.node = document.createTextNode(vNode.text));
+            return (vNode.node = this.document.createTextNode(vNode.text));
 
         const reusedVNode =
             vNode.selector && reusedVNodes?.[vNode.selector]?.shift();
 
         vNode.node = vNode.tagName
             ? reusedVNode?.node ||
-              document.createElement(vNode.tagName, { is: vNode.is })
-            : document.createDocumentFragment();
+              this.document.createElement(vNode.tagName, { is: vNode.is })
+            : this.document.createDocumentFragment();
 
         const { node } = this.patch(
             reusedVNode || { tagName: vNode.tagName, node: vNode.node },
@@ -203,7 +216,9 @@ export class DOMRenderer {
         return newVNode;
     }
 
-    render(vNode: VNode, node: ParentNode = document.body) {
+    render(vNode: VNode, node: ParentNode = this.document.body) {
+        this.document = node.ownerDocument;
+
         var root = this.treeCache.get(node) || VNode.fromDOM(node);
 
         root = this.patch(root, new VNode({ ...root, children: [vNode] }));
@@ -213,11 +228,36 @@ export class DOMRenderer {
         return root;
     }
 
+    *findShadowRoots(root: Node) {
+        const walker = this.document.createTreeWalker(
+            root,
+            NodeFilter.SHOW_ELEMENT,
+            {
+                acceptNode: (node: Element) =>
+                    node instanceof HTMLElement
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_SKIP
+            }
+        );
+        var currentNode: HTMLElement | null = null;
+
+        while ((currentNode = walker.nextNode() as HTMLElement)) {
+            const shadowRoot = shadowDOMs.get(currentNode);
+
+            if (shadowRoot) {
+                yield shadowRoot;
+                yield* this.findShadowRoots(shadowRoot);
+            }
+        }
+    }
+
     renderToStaticMarkup(tree: VNode) {
-        const { body } = document.implementation.createHTMLDocument();
+        const { body } = this.document.implementation.createHTMLDocument();
 
         this.render(tree, body);
 
-        return body.innerHTML;
+        const shadowRoots = [...this.findShadowRoots(body)];
+
+        return body.getHTML({ serializableShadowRoots: true, shadowRoots });
     }
 }
