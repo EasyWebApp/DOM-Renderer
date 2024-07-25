@@ -1,4 +1,5 @@
-import type {} from 'declarative-shadow-dom-polyfill';
+import { findShadowRoots, generateHTML } from 'declarative-shadow-dom-polyfill';
+import { ReadableStream } from 'web-streams-polyfill';
 import {
     diffKeys,
     DiffStatus,
@@ -10,17 +11,6 @@ import {
 } from 'web-utility';
 
 import { DataObject, VNode } from './VDOM';
-
-const { attachShadow } = HTMLElement.prototype,
-    shadowDOMs = new WeakMap<Element, ShadowRoot>();
-
-HTMLElement.prototype.attachShadow = function (options: ShadowRootInit) {
-    const shadowRoot = attachShadow.call(this, options);
-
-    shadowDOMs.set(this, shadowRoot);
-
-    return shadowRoot;
-};
 
 export class DOMRenderer {
     eventPattern = /^on[A-Z]/;
@@ -228,36 +218,27 @@ export class DOMRenderer {
         return root;
     }
 
-    *findShadowRoots(root: Node) {
-        const walker = this.document.createTreeWalker(
-            root,
-            NodeFilter.SHOW_ELEMENT,
-            {
-                acceptNode: (node: Element) =>
-                    node instanceof HTMLElement
-                        ? NodeFilter.FILTER_ACCEPT
-                        : NodeFilter.FILTER_SKIP
-            }
-        );
-        var currentNode: HTMLElement | null = null;
-
-        while ((currentNode = walker.nextNode() as HTMLElement)) {
-            const shadowRoot = shadowDOMs.get(currentNode);
-
-            if (shadowRoot) {
-                yield shadowRoot;
-                yield* this.findShadowRoots(shadowRoot);
-            }
-        }
-    }
-
-    renderToStaticMarkup(tree: VNode) {
+    protected buildRenderTree(tree: VNode) {
         const { body } = this.document.implementation.createHTMLDocument();
 
         this.render(tree, body);
 
-        const shadowRoots = [...this.findShadowRoots(body)];
+        const shadowRoots = [...findShadowRoots(body)];
+
+        return { body, shadowRoots };
+    }
+
+    renderToStaticMarkup(tree: VNode) {
+        const { body, shadowRoots } = this.buildRenderTree(tree);
 
         return body.getHTML({ serializableShadowRoots: true, shadowRoots });
+    }
+
+    renderToReadableStream(tree: VNode) {
+        const { body, shadowRoots } = this.buildRenderTree(tree);
+
+        return ReadableStream.from(
+            generateHTML(body, { serializableShadowRoots: true, shadowRoots })
+        );
     }
 }

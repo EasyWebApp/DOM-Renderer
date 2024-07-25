@@ -122,19 +122,32 @@ describe('DOM Renderer', () => {
         expect(shadowRoot.innerHTML).toBe('<a></a>');
     });
 
-    it('should render the Shadow Root to HTML strings', () => {
-        class ShadowRootTag extends HTMLElement {
-            constructor() {
-                super();
-                this.attachShadow({ mode: 'closed' }).innerHTML = '<a></a>';
-            }
+    class ShadowRootTag extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'closed' }).innerHTML = '<a></a>';
         }
-        customElements.define('shadow-root-tag', ShadowRootTag);
+    }
+    customElements.define('shadow-root-tag', ShadowRootTag);
 
+    it('should render the Shadow Root to HTML strings', () => {
         const markup = renderer.renderToStaticMarkup(
             new VNode({ tagName: 'shadow-root-tag' })
         );
         expect(markup).toBe(
+            `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
+        );
+    });
+
+    it('should render the Shadow Root to a Readable Stream', async () => {
+        const stream = renderer.renderToReadableStream(
+                new VNode({ tagName: 'shadow-root-tag' })
+            ),
+            markups: string[] = [];
+
+        for await (const markup of stream) markups.push(markup);
+
+        expect(markups.join('')).toBe(
             `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
         );
     });
