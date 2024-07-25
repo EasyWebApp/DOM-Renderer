@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       declarative-shadow-dom-polyfill:
-        specifier: ^0.4.0-rc.0
-        version: 0.4.0-rc.0(typescript@5.5.4)
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.5.4)
       tslib:
         specifier: ^2.6.3
         version: 2.6.3
@@ -31,8 +31,8 @@ importers:
         specifier: ^18.19.42
         version: 18.19.42
       husky:
-        specifier: ^9.1.1
-        version: 9.1.1
+        specifier: ^9.1.2
+        version: 9.1.2
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@18.19.42)
@@ -597,8 +597,8 @@ packages:
       supports-color:
         optional: true
 
-  declarative-shadow-dom-polyfill@0.4.0-rc.0:
-    resolution: {integrity: sha512-dEUpIerVi0rsEBaW4kr0tEdasEAcx8H65cqG8KCMVZZuUMtZq20vLrsYituTBUZP56VqR90Sf/AFyQvZijViLw==}
+  declarative-shadow-dom-polyfill@0.4.0:
+    resolution: {integrity: sha512-a3c/x43EIo+gzc7ZPY1NuOowPOClqaaU+5G1wwOG7h5xQ8UhZPM6NYcSDsvhTn9Pyc275pmvSUPPY+r4pPTOVA==}
     peerDependencies:
       typescript: '>=5.5.3'
 
@@ -796,8 +796,8 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
-  husky@9.1.1:
-    resolution: {integrity: sha512-fCqlqLXcBnXa/TJXmT93/A36tJsjdJkibQ1MuIiFyCCYUlpYpIaj2mv1w+3KR6Rzu1IC3slFTje5f6DUp2A2rg==}
+  husky@9.1.2:
+    resolution: {integrity: sha512-1/aDMXZdhr1VdJJTLt6e7BipM0Jd9qkpubPiIplon1WmCeOy3nnzsCMeBqS9AsL5ioonl8F8y/F2CLOmk19/Pw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2317,7 +2317,7 @@ snapshots:
     dependencies:
       ms: 2.1.2
 
-  declarative-shadow-dom-polyfill@0.4.0-rc.0(typescript@5.5.4):
+  declarative-shadow-dom-polyfill@0.4.0(typescript@5.5.4):
     dependencies:
       typescript: 5.5.4
 
@@ -2481,7 +2481,7 @@ snapshots:
 
   human-signals@5.0.0: {}
 
-  husky@9.1.1: {}
+  husky@9.1.2: {}
 
   ieee754@1.2.1: {}
 

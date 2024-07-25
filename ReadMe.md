@@ -66,6 +66,24 @@ const newVNode = new DOMRenderer().render(
 console.log(newVNode);
 ```
 
+### Node.js & Bun
+
+```jsx
+import { Readable } from 'stream';
+import { createServer } from 'http';
+import { DOMRenderer } from 'dom-renderer';
+
+const renderer = new DOMRenderer();
+
+const Hello = () => <h1>Hello, JSX SSR!</h1>;
+
+createServer((request, response) => {
+    const stream = renderer.renderToReadableStream(<Hello />);
+
+    Readable.fromWeb(stream).pipe(response);
+}).listen(8080);
+```
+
 ## Framework
 
 ### Web components
