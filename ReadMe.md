@@ -68,17 +68,29 @@ console.log(newVNode);
 
 ### Node.js & Bun
 
-```jsx
-import { Readable } from 'stream';
-import { createServer } from 'http';
+#### `view.tsx`
+
+```tsx
 import { DOMRenderer } from 'dom-renderer';
 
 const renderer = new DOMRenderer();
 
 const Hello = () => <h1>Hello, JSX SSR!</h1>;
 
+export const generateStream = () => renderer.renderToReadableStream(<Hello />);
+```
+
+#### `index.ts`
+
+```js
+import { Readable } from 'stream';
+import { createServer } from 'http';
+import 'dom-renderer/polyfill';
+
+import { generateStream } from './view';
+
 createServer((request, response) => {
-    const stream = renderer.renderToReadableStream(<Hello />);
+    const stream = generateStream();
 
     Readable.fromWeb(stream).pipe(response);
 }).listen(8080);
