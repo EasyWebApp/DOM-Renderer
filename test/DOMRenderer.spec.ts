@@ -28,14 +28,16 @@ describe('DOM Renderer', () => {
             { ...root },
             {
                 ...root,
-                style: { margin: '0' }
+                style: { margin: '0', '--color': 'red' }
             }
         );
         expect(document.body.style.margin).toBe('0px');
+        expect(document.body.style.getPropertyValue('--color')).toBe('red');
 
         renderer.patch(newVNode, root);
 
         expect(document.body.style.margin).toBe('');
+        expect(document.body.style.getPropertyValue('--color')).toBe('');
     });
 
     it('should update DOM children', () => {

@@ -159,42 +159,46 @@ export class DOMRenderer {
         });
     }
 
-    patch(oldVNode: VNode, newVNode: VNode): VNode {
-        const { tagName } = oldVNode;
-        const isXML = templateOf(tagName) && elementTypeOf(tagName) === 'xml';
+    protected removeProperty = (node: Element, key: string) =>
+        this.eventPattern.test(key)
+            ? (node[key.toLowerCase()] = null)
+            : node.removeAttribute(
+                  this.ariaPattern.test(key)
+                      ? toHyphenCase(key)
+                      : VNode.propsMap[key] || key
+              );
+    protected setProperty = (node: Element, key: string, value: string) => {
+        const isXML =
+            templateOf(node.tagName) && elementTypeOf(node.tagName) === 'xml';
 
+        if (isXML || key.includes('-')) node.setAttribute(key, value);
+        else
+            try {
+                const name = this.propsKeyOf(key);
+
+                if (this.eventPattern.test(key) && !(name in node))
+                    this.handleCustomEvent(node, name.slice(2));
+
+                node[name] = value;
+            } catch {
+                node.setAttribute(key, value);
+            }
+    };
+
+    patch(oldVNode: VNode, newVNode: VNode): VNode {
         this.updateProps(
             oldVNode.node as Element,
             oldVNode.props,
             newVNode.props,
-            (node, key) =>
-                this.eventPattern.test(key)
-                    ? (node[key.toLowerCase()] = null)
-                    : node.removeAttribute(
-                          this.ariaPattern.test(key)
-                              ? toHyphenCase(key)
-                              : VNode.propsMap[key] || key
-                      ),
-            (node, key, value) => {
-                if (isXML || key.includes('-')) node.setAttribute(key, value);
-                else
-                    try {
-                        const name = this.propsKeyOf(key);
-
-                        if (this.eventPattern.test(key) && !(name in node))
-                            this.handleCustomEvent(node, name.slice(2));
-
-                        node[name] = value;
-                    } catch {
-                        node.setAttribute(key, value);
-                    }
-            }
+            this.removeProperty,
+            this.setProperty
         );
         this.updateProps(
             (oldVNode.node as HTMLElement).style,
             oldVNode.style,
             newVNode.style,
-            (node, key) => node.removeProperty(key)
+            (node, key) => node.removeProperty(key),
+            (node, key, value) => node.setProperty(key, value)
         );
         this.updateChildren(
             oldVNode.node as ParentNode,

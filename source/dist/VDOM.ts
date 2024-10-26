@@ -2,6 +2,10 @@ import { HTMLProps, IndexKey, isEmpty } from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
+export type VNodeStyle = HTMLProps<HTMLElement>['style'] & {
+    [K in `--${string}`]?: string;
+};
+
 export class VNode {
     key?: IndexKey;
     ref?: (node?: Node) => any;
@@ -10,7 +14,7 @@ export class VNode {
     tagName?: string;
     is?: string;
     props?: DataObject;
-    style?: HTMLProps<HTMLElement>['style'];
+    style?: VNodeStyle;
     children?: VNode[];
     node?: Node;
 
