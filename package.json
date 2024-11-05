@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -25,7 +25,7 @@
     "main": "dist/index.js",
     "dependencies": {
         "declarative-shadow-dom-polyfill": "^0.4.0",
-        "tslib": "^2.8.0",
+        "tslib": "^2.8.1",
         "web-streams-polyfill": "^4.0.0",
         "web-utility": "^4.4.1"
     },
@@ -35,7 +35,7 @@
     "devDependencies": {
         "@happy-dom/jest-environment": "^14.12.3",
         "@types/jest": "^29.5.14",
-        "@types/node": "^20.17.1",
+        "@types/node": "^20.17.6",
         "happy-dom": "^14.12.3",
         "husky": "^9.1.6",
         "jest": "^29.7.0",
@@ -43,15 +43,16 @@
         "open-cli": "^8.0.0",
         "prettier": "^3.3.3",
         "ts-jest": "^29.2.5",
-        "typedoc": "^0.26.10",
-        "typedoc-plugin-mdn-links": "^3.3.4",
+        "typedoc": "^0.26.11",
+        "typedoc-plugin-mdn-links": "^3.3.6",
         "typescript": "~5.6.3"
     },
     "prettier": {
         "singleQuote": true,
         "trailingComma": "none",
         "arrowParens": "avoid",
-        "tabWidth": 4
+        "tabWidth": 4,
+        "printWidth": 100
     },
     "lint-staged": {
         "*.{md,json,yml,ts}": "prettier --write"

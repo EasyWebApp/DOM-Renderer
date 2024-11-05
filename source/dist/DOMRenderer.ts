@@ -24,9 +24,7 @@ export class DOMRenderer {
         key?.toString() || props?.id || (text || selector || '') + index;
 
     protected vNodeOf = (list: VNode[], key?: VNode['key']) =>
-        list.find(
-            (vNode, index) => `${this.keyOf(vNode, index)}` === String(key)
-        );
+        list.find((vNode, index) => `${this.keyOf(vNode, index)}` === String(key));
 
     protected propsKeyOf = (key: string) =>
         key.startsWith('aria-')
@@ -42,36 +40,25 @@ export class DOMRenderer {
         onDelete?: (node: N, key: string) => any,
         onAdd?: (node: N, key: string, value: any) => any
     ) {
-        const { group } = diffKeys(
-            Object.keys(oldProps),
-            Object.keys(newProps)
-        );
+        const { group } = diffKeys(Object.keys(oldProps), Object.keys(newProps));
 
         for (const [key] of group[DiffStatus.Old] || []) onDelete?.(node, key);
 
-        for (const [key] of [
-            ...(group[DiffStatus.Same] || []),
-            ...(group[DiffStatus.New] || [])
-        ])
+        for (const [key] of [...(group[DiffStatus.Same] || []), ...(group[DiffStatus.New] || [])])
             if (oldProps[key] !== newProps[key])
                 if (onAdd instanceof Function) onAdd(node, key, newProps[key]);
                 else Reflect.set(node, key, newProps[key]);
     }
 
     protected createNode(vNode: VNode, reusedVNodes?: Record<string, VNode[]>) {
-        if (vNode.text)
-            return (vNode.node = this.document.createTextNode(vNode.text));
+        if (vNode.text) return vNode.createDOM(this.document);
 
-        const reusedVNode =
-            vNode.selector && reusedVNodes?.[vNode.selector]?.shift();
+        const reusedVNode = vNode.selector && reusedVNodes?.[vNode.selector]?.shift();
 
-        vNode.node = vNode.tagName
-            ? reusedVNode?.node ||
-              this.document.createElement(vNode.tagName, { is: vNode.is })
-            : this.document.createDocumentFragment();
+        vNode.node = reusedVNode?.node || vNode.createDOM(this.document);
 
         const { node } = this.patch(
-            reusedVNode || { tagName: vNode.tagName, node: vNode.node },
+            reusedVNode || new VNode({ tagName: vNode.tagName, node: vNode.node }),
             vNode
         );
         if (node) vNode.ref?.(node);
@@ -80,8 +67,7 @@ export class DOMRenderer {
     }
 
     protected deleteNode({ ref, node, children }: VNode) {
-        if (node instanceof DocumentFragment)
-            children?.forEach(this.deleteNode);
+        if (node instanceof DocumentFragment) children?.forEach(this.deleteNode);
         else if (node) {
             (node as ChildNode).remove();
 
@@ -110,28 +96,18 @@ export class DOMRenderer {
         if (newNodes[0]) root.append(...newNodes);
     }
 
-    protected updateChildren(
-        node: ParentNode,
-        oldList: VNode[],
-        newList: VNode[]
-    ) {
-        const { map, group } = diffKeys(
-            oldList.map(this.keyOf),
-            newList.map(this.keyOf)
-        );
+    protected updateChildren(node: ParentNode, oldList: VNode[], newList: VNode[]) {
+        const { map, group } = diffKeys(oldList.map(this.keyOf), newList.map(this.keyOf));
         const deletingGroup =
             group[DiffStatus.Old] &&
             groupBy(
-                group[DiffStatus.Old].map(([key]) =>
-                    this.vNodeOf(oldList, key)
-                ),
+                group[DiffStatus.Old].map(([key]) => this.vNodeOf(oldList, key)),
                 ({ selector }) => selector + ''
             );
         const newNodes = newList.map((vNode, index) => {
             const key = this.keyOf(vNode, index);
 
-            if (map[key] !== DiffStatus.Same)
-                return this.createNode(vNode, deletingGroup);
+            if (map[key] !== DiffStatus.Same) return this.createNode(vNode, deletingGroup);
 
             const oldVNode = this.vNodeOf(oldList, key)!;
 
@@ -163,13 +139,10 @@ export class DOMRenderer {
         this.eventPattern.test(key)
             ? (node[key.toLowerCase()] = null)
             : node.removeAttribute(
-                  this.ariaPattern.test(key)
-                      ? toHyphenCase(key)
-                      : VNode.propsMap[key] || key
+                  this.ariaPattern.test(key) ? toHyphenCase(key) : VNode.propsMap[key] || key
               );
     protected setProperty = (node: Element, key: string, value: string) => {
-        const isXML =
-            templateOf(node.tagName) && elementTypeOf(node.tagName) === 'xml';
+        const isXML = templateOf(node.tagName) && elementTypeOf(node.tagName) === 'xml';
 
         if (isXML || key.includes('-')) node.setAttribute(key, value);
         else

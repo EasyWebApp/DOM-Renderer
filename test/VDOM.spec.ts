@@ -15,12 +15,14 @@ describe('VDOM', () => {
     });
 
     it('should detect a Fragment VNode', () => {
-        const result = VNode.isFragment({
-            key: undefined,
-            tagName: undefined,
-            props: {},
-            children: []
-        });
+        const result = VNode.isFragment(
+            new VNode({
+                key: undefined,
+                tagName: undefined,
+                props: {},
+                children: []
+            })
+        );
         expect(result).toBe(true);
     });
 
@@ -47,19 +49,13 @@ describe('VDOM', () => {
                 children: [oneLevelFragment, oneLevelFragment]
             });
         const fragmentVNode = new VNode({
-            children: [
-                new VNode({ tagName: 'a' }),
-                oneLevelFragment,
-                twoLevelFragment
-            ]
+            children: [new VNode({ tagName: 'a' }), oneLevelFragment, twoLevelFragment]
         });
-        expect(fragmentVNode).toEqual({
-            children: [
-                { tagName: 'a', selector: 'a' },
-                { tagName: 'b', selector: 'b' },
-                { tagName: 'b', selector: 'b' },
-                { tagName: 'b', selector: 'b' }
-            ]
-        });
+        expect(fragmentVNode.children?.map(child => child.toJSON())).toEqual([
+            { tagName: 'a', selector: 'a', children: [] },
+            { tagName: 'b', selector: 'b', children: [] },
+            { tagName: 'b', selector: 'b', children: [] },
+            { tagName: 'b', selector: 'b', children: [] }
+        ]);
     });
 });

@@ -10,11 +10,11 @@ describe('DOM Renderer', () => {
 
     it('should update DOM properties', () => {
         const newVNode = renderer.patch(
-            { ...root },
-            {
+            new VNode({ ...root }),
+            new VNode({
                 ...root,
                 props: { className: 'container' }
-            }
+            })
         );
         expect(document.body.className).toBe('container');
 
@@ -25,11 +25,11 @@ describe('DOM Renderer', () => {
 
     it('should update DOM styles', () => {
         const newVNode = renderer.patch(
-            { ...root },
-            {
+            new VNode({ ...root }),
+            new VNode({
                 ...root,
                 style: { margin: '0', '--color': 'red' }
-            }
+            })
         );
         expect(document.body.style.margin).toBe('0px');
         expect(document.body.style.getPropertyValue('--color')).toBe('red');
@@ -42,8 +42,8 @@ describe('DOM Renderer', () => {
 
     it('should update DOM children', () => {
         const newNode = renderer.patch(
-            { ...root },
-            {
+            new VNode({ ...root }),
+            new VNode({
                 ...root,
                 children: [
                     new VNode({
@@ -53,7 +53,7 @@ describe('DOM Renderer', () => {
                         children: [new VNode({ text: 'idea2app' })]
                     })
                 ]
-            }
+            })
         );
         expect(document.body.innerHTML).toBe(
             '<a href="https://idea2.app/" style="color: red;">idea2app</a>'
@@ -65,15 +65,21 @@ describe('DOM Renderer', () => {
 
     it('should update DOM children without keys', () => {
         var newNode = renderer.patch(
-            { ...root },
-            { ...root, children: [{ children: [new VNode({ tagName: 'i' })] }] }
+            new VNode({ ...root }),
+            new VNode({
+                ...root,
+                children: [new VNode({ children: [new VNode({ tagName: 'i' })] })]
+            })
         );
         expect(document.body.innerHTML).toBe('<i></i>');
 
-        newNode = renderer.patch(newNode, {
-            ...root,
-            children: [{ children: [new VNode({ tagName: 'a' })] }]
-        });
+        newNode = renderer.patch(
+            newNode,
+            new VNode({
+                ...root,
+                children: [new VNode({ children: [new VNode({ tagName: 'a' })] })]
+            })
+        );
         expect(document.body.innerHTML).toBe('<a></a>');
 
         renderer.patch(newNode, root);
@@ -90,30 +96,28 @@ describe('DOM Renderer', () => {
         customElements.define('x-test', Test);
 
         const newNode = renderer.patch(
-            { ...root },
-            {
+            new VNode({ ...root }),
+            new VNode({
                 ...root,
                 children: [new VNode({ tagName: 'x-test' })]
-            }
+            })
         );
         expect(document.body.innerHTML).toBe('<x-test></x-test>');
 
-        renderer.patch(newNode, {
-            ...root,
-            children: [
-                new VNode({ text: 'y' }),
-                new VNode({ tagName: 'x-test' })
-            ]
-        });
+        renderer.patch(
+            newNode,
+            new VNode({
+                ...root,
+                children: [new VNode({ text: 'y' }), new VNode({ tagName: 'x-test' })]
+            })
+        );
         expect(document.body.innerHTML).toBe('y<x-test></x-test>');
 
         expect(connectHook).toHaveBeenCalledTimes(1);
     });
 
     it('should render a Virtual DOM node to a Shadow Root', () => {
-        const shadowRoot = document
-            .createElement('div')
-            .attachShadow({ mode: 'open' });
+        const shadowRoot = document.createElement('div').attachShadow({ mode: 'open' });
 
         const shadowVDOM = renderer.patch(
             VNode.fromDOM(shadowRoot),
@@ -133,18 +137,14 @@ describe('DOM Renderer', () => {
     customElements.define('shadow-root-tag', ShadowRootTag);
 
     it('should render the Shadow Root to HTML strings', () => {
-        const markup = renderer.renderToStaticMarkup(
-            new VNode({ tagName: 'shadow-root-tag' })
-        );
+        const markup = renderer.renderToStaticMarkup(new VNode({ tagName: 'shadow-root-tag' }));
         expect(markup).toBe(
             `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
         );
     });
 
     it('should render the Shadow Root to a Readable Stream', async () => {
-        const stream = renderer.renderToReadableStream(
-                new VNode({ tagName: 'shadow-root-tag' })
-            ),
+        const stream = renderer.renderToReadableStream(new VNode({ tagName: 'shadow-root-tag' })),
             markups: string[] = [];
 
         for await (const markup of stream) markups.push(markup);
