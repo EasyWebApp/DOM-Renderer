@@ -59,7 +59,15 @@
     },
     "jest": {
         "preset": "ts-jest",
-        "testEnvironment": "@happy-dom/jest-environment"
+        "testEnvironment": "@happy-dom/jest-environment",
+        "transform": {
+            "\\.tsx?$": [
+                "ts-jest",
+                {
+                    "tsconfig": "test/tsconfig.json"
+                }
+            ]
+        }
     },
     "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
     "scripts": {

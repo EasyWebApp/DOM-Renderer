@@ -1,4 +1,12 @@
-import { HTMLProps, IndexKey, isEmpty } from 'web-utility';
+import {
+    DataKeys,
+    DOMProps_Read2Write,
+    EventHandlers,
+    HTMLProps,
+    IndexKey,
+    isEmpty,
+    SVGProps
+} from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
@@ -135,6 +143,23 @@ export type JsxProps<T extends HTMLElement> = DataObject &
     Omit<HTMLProps<T>, 'children'> & {
         children?: JsxChildren;
     };
+export type SvgJsxProps<T extends SVGElement> = DataObject &
+    Pick<VNode, 'key' | 'ref'> &
+    Omit<SVGProps<T>, 'children'> & {
+        children?: JsxChildren;
+    };
+export type XMLOwnKeys<T extends HTMLElement | SVGElement | MathMLElement = HTMLElement> = Exclude<
+    keyof T,
+    keyof Node | keyof EventTarget
+>;
+export type MathMLProps<T extends MathMLElement> = Partial<
+    EventHandlers<T> & DOMProps_Read2Write<Pick<T, Extract<DataKeys<T>, XMLOwnKeys<T>>>>
+>;
+export type MathMlJsxProps<T extends MathMLElement> = DataObject &
+    Pick<VNode, 'key' | 'ref'> &
+    Omit<MathMLProps<T>, 'children'> & {
+        children?: JsxChildren;
+    };
 
 declare global {
     /**
@@ -145,6 +170,12 @@ declare global {
 
         type JSXElements = {
             [tagName in keyof HTMLElementTagNameMap]: JsxProps<HTMLElementTagNameMap[tagName]>;
+        } & {
+            [tagName in keyof SVGElementTagNameMap]: SvgJsxProps<SVGElementTagNameMap[tagName]>;
+        } & {
+            [tagName in keyof MathMLElementTagNameMap]: MathMlJsxProps<
+                MathMLElementTagNameMap[tagName]
+            >;
         };
         interface IntrinsicElements extends JSXElements {}
 

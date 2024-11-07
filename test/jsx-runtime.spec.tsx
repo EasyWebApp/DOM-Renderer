@@ -1,18 +1,25 @@
 import 'declarative-shadow-dom-polyfill';
 
 import { DOMRenderer } from '../source/dist';
-import { jsx, Fragment } from '../source/jsx-runtime';
+
+class MyTag extends HTMLElement {}
+
+customElements.define('my-tag', MyTag);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'my-tag': MyTag;
+    }
+}
 
 describe('JSX runtime', () => {
     const renderer = new DOMRenderer();
 
     it('should render JSX to DOM', () => {
         renderer.render(
-            jsx('a', {
-                href: 'https://idea2.app/',
-                style: { color: 'red' },
-                children: ['idea2app']
-            })
+            <a href="https://idea2.app/" style={{ color: 'red' }}>
+                idea2app
+            </a>
         );
         expect(document.body.innerHTML).toBe(
             '<a href="https://idea2.app/" style="color: red;">idea2app</a>'
@@ -21,15 +28,11 @@ describe('JSX runtime', () => {
 
     it('should render JSX fragment to DOM', () => {
         renderer.render(
-            jsx(Fragment, {
-                children: [
-                    jsx('a', {
-                        href: 'https://idea2.app/',
-                        style: { color: 'blue' },
-                        children: ['idea2app']
-                    })
-                ]
-            })
+            <>
+                <a href="https://idea2.app/" style={{ color: 'blue' }}>
+                    idea2app
+                </a>
+            </>
         );
         expect(document.body.innerHTML).toBe(
             '<a href="https://idea2.app/" style="color: blue;">idea2app</a>'
@@ -37,11 +40,7 @@ describe('JSX runtime', () => {
     });
 
     it('should render a Web components class', () => {
-        class MyTag extends HTMLElement {}
-
-        customElements.define('my-tag', MyTag);
-
-        renderer.render(jsx(MyTag, {}));
+        renderer.render(<my-tag />);
 
         expect(document.body.innerHTML).toBe('<my-tag></my-tag>');
     });
@@ -51,34 +50,43 @@ describe('JSX runtime', () => {
 
         customElements.define('my-div', MyDiv, { extends: 'div' });
 
-        renderer.render(jsx('div', { is: 'my-div' }));
+        renderer.render(<div is="my-div" />);
 
         expect(document.body.innerHTML).toBe('<div is="my-div"></div>');
     });
 
     it('should ignore Empty values except 0', () => {
         renderer.render(
-            jsx(Fragment, { children: [0, false, null, undefined, NaN] })
+            <>
+                {0}
+                {false}
+                {null}
+                {undefined}
+                {NaN}
+            </>
         );
         expect(document.body.innerHTML).toBe('0');
     });
 
     it('should render Non-empty Primitive values', () => {
-        renderer.render(jsx(Fragment, { children: [1, true] }));
-
+        renderer.render(
+            <>
+                {1}
+                {true}
+            </>
+        );
         expect(document.body.innerHTML).toBe('1true');
     });
 
     it('should render DataSet & ARIA attributes', () => {
-        renderer.render(
-            jsx('div', { 'data-id': 'idea2app', 'aria-label': 'idea2app' })
-        );
+        renderer.render(<div data-id="idea2app" aria-label="idea2app" />);
+
         expect(document.body.innerHTML).toBe(
             '<div data-id="idea2app" aria-label="idea2app"></div>'
         );
         // To Do: https://github.com/jsdom/jsdom/issues/3323
 
-        // renderer.render(jsx('div', { ariaLabel: 'fCC' }));
+        // renderer.render(<div ariaLabel="fCC"></div>);
 
         // expect(document.body.innerHTML).toBe('<div aria-label="fCC"></div>');
     });
@@ -86,17 +94,17 @@ describe('JSX runtime', () => {
     it('should call Event handlers', () => {
         const onClick = jest.fn();
 
-        renderer.render(jsx('i', { onClick }));
+        renderer.render(<i onClick={onClick} />);
 
         document.querySelector('i')?.click();
 
-        expect(onClick).toBeCalledTimes(1);
+        expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('should toggle a real DOM Node by callbacks', () => {
         const ref = jest.fn();
 
-        renderer.render(jsx('b', { ref }));
+        renderer.render(<b ref={ref} />);
 
         const { firstChild } = document.body;
 
@@ -104,7 +112,7 @@ describe('JSX runtime', () => {
 
         expect(ref).toHaveBeenCalledWith(firstChild);
 
-        renderer.render(jsx('a', {}));
+        renderer.render(<a />);
 
         expect(document.body.innerHTML).toBe('<a></a>');
 
@@ -114,14 +122,13 @@ describe('JSX runtime', () => {
     it('should reuse similar DOM nodes', () => {
         const renderList = (offset = 0) =>
             renderer.render(
-                jsx('ul', {
-                    children: Array.from(new Array(2), (_, index) => {
-                        const key = String.fromCodePoint(
-                            'a'.charCodeAt(0) + index + offset
-                        );
-                        return jsx('li', { children: [key] }, key);
-                    })
-                })
+                <ul>
+                    {Array.from({ length: 2 }, (_, index) => {
+                        const key = String.fromCodePoint('a'.charCodeAt(0) + index + offset);
+
+                        return <li key={key}>{key}</li>;
+                    })}
+                </ul>
             );
         renderList();
 
@@ -133,35 +140,51 @@ describe('JSX runtime', () => {
 
         expect(document.body.innerHTML).toBe('<ul><li>c</li><li>d</li></ul>');
 
-        expect([...document.body.firstElementChild!.children]).toEqual([
-            ...children
-        ]);
+        expect([...document.body.firstElementChild!.children]).toEqual([...children]);
     });
 
     it('should not share a real DOM with the same VDOM', () => {
-        const sameVDOM = jsx('a', {});
+        const sameVDOM = <a />;
 
         renderer.render(
-            jsx(Fragment, {
-                children: [
-                    jsx('nav', { children: [sameVDOM] }),
-                    jsx('nav', { children: [sameVDOM] })
-                ]
-            })
+            <>
+                <nav>{sameVDOM}</nav>
+                <nav>{sameVDOM}</nav>
+            </>
         );
-        expect(document.body.innerHTML).toBe(
-            '<nav><a></a></nav><nav><a></a></nav>'
-        );
+        expect(document.body.innerHTML).toBe('<nav><a></a></nav><nav><a></a></nav>');
     });
 
     it('should handle Nested children arrays', () => {
         renderer.render(
-            jsx(Fragment, { children: [jsx('nav', {}), [jsx('nav', {})]] })
+            <>
+                <nav />
+                {[<nav key="1" />]}
+            </>
         );
         expect(document.body.innerHTML).toBe('<nav></nav><nav></nav>');
     });
 
     it('should render to a Static String', () => {
-        expect(renderer.renderToStaticMarkup(jsx('i', {}))).toBe('<i></i>');
+        expect(renderer.renderToStaticMarkup(<i />)).toBe('<i></i>');
+    });
+
+    it('should render SVG', () => {
+        renderer.render(
+            // copy from https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Getting_Started
+            <svg version="1.1" width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="red" />
+
+                <circle cx="150" cy="100" r="80" fill="green" />
+
+                <text x="150" y="125" font-size="60" text-anchor="middle" fill="white">
+                    SVG
+                </text>
+            </svg>,
+            document.body
+        );
+        expect(document.body.innerHTML).toBe(
+            '<svg version="1.1" width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="red"></rect><circle cx="150" cy="100" r="80" fill="green"></circle><text x="150" y="125" font-size="60" text-anchor="middle" fill="white">SVG</text></svg>'
+        );
     });
 });
