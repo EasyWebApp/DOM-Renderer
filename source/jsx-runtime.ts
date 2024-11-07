@@ -1,6 +1,6 @@
 import { IndexKey, isEmpty, isHTMLElementClass, tagNameOf } from 'web-utility';
 
-import { DataObject, VNode } from './dist/VDOM';
+import { DataObject, VNode, VNodeMeta } from './dist/VDOM';
 
 /**
  * @see {@link https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md}
@@ -25,7 +25,7 @@ export function jsx(
         )
         .filter(Boolean);
 
-    const commonProps: VNode = { key, ref, is, style, children };
+    const commonProps: VNodeMeta = { key, ref, is, style, children };
 
     return typeof type === 'string'
         ? new VNode({ ...commonProps, tagName: type, props })
