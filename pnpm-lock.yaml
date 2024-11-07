@@ -18,8 +18,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       web-utility:
-        specifier: ^4.4.1
-        version: 4.4.1(typescript@5.6.3)
+        specifier: ^4.4.2
+        version: 4.4.2(typescript@5.6.3)
     devDependencies:
       '@happy-dom/jest-environment':
         specifier: ^14.12.3
@@ -1634,8 +1634,8 @@ packages:
     resolution: {integrity: sha512-0zJXHRAYEjM2tUfZ2DiSOHAa2aw1tisnnhU3ufD57R8iefL+DcdJyRBRyJpG+NUimDgbTI/lH+gAE1PAvV3Cgw==}
     engines: {node: '>= 8'}
 
-  web-utility@4.4.1:
-    resolution: {integrity: sha512-MGmMMjSdsKWHDBpiEHa4Rve6gzFz/aB7RHYyJEKk7cwh+M5/dEjIG2kj/299PXLvHOAMxoywTBhY/d0k2lTgUA==}
+  web-utility@4.4.2:
+    resolution: {integrity: sha512-mpUh9jQ4SGSRKehfQKsvMMItzeRb5SPvYbbyksvWy5HPVsKh8VOS6ijVD0PiwaFGuv729Dg+oXzWyiibSZVCBw==}
     peerDependencies:
       typescript: '>=4.1'
 
@@ -3559,7 +3559,7 @@ snapshots:
 
   web-streams-polyfill@4.0.0: {}
 
-  web-utility@4.4.1(typescript@5.6.3):
+  web-utility@4.4.2(typescript@5.6.3):
     dependencies:
       '@swc/helpers': 0.5.13
       element-internals-polyfill: 1.3.12

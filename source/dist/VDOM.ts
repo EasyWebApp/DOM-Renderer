@@ -1,23 +1,9 @@
-import {
-    DataKeys,
-    DOMProps_Read2Write,
-    EventHandlers,
-    HTMLProps,
-    IndexKey,
-    isEmpty,
-    SVGProps
-} from 'web-utility';
+import { HTMLProps, IndexKey, isEmpty, MathMLProps, SVGProps, XMLNamespace } from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
 export type VNodeStyle = HTMLProps<HTMLElement>['style'] & {
     [K in `--${string}`]?: string;
-};
-
-export const XMLNamespace = {
-    html: 'http://www.w3.org/1999/xhtml',
-    svg: 'http://www.w3.org/2000/svg',
-    math: 'http://www.w3.org/1998/Math/MathML'
 };
 
 export class VNodeMeta {
@@ -148,13 +134,6 @@ export type SvgJsxProps<T extends SVGElement> = DataObject &
     Omit<SVGProps<T>, 'children'> & {
         children?: JsxChildren;
     };
-export type XMLOwnKeys<T extends HTMLElement | SVGElement | MathMLElement = HTMLElement> = Exclude<
-    keyof T,
-    keyof Node | keyof EventTarget
->;
-export type MathMLProps<T extends MathMLElement> = Partial<
-    EventHandlers<T> & DOMProps_Read2Write<Pick<T, Extract<DataKeys<T>, XMLOwnKeys<T>>>>
->;
 export type MathMlJsxProps<T extends MathMLElement> = DataObject &
     Pick<VNode, 'key' | 'ref'> &
     Omit<MathMLProps<T>, 'children'> & {
