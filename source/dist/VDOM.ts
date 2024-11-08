@@ -50,8 +50,12 @@ export class VNode extends VNodeMeta {
         while ((current = current.parent)) yield current;
     }
 
-    findNamespace() {
+    namespaceOf(tagName: string) {
+        if (XMLNamespace[tagName]) return XMLNamespace[tagName];
+
         for (const { namespace } of this.walkUp()) if (namespace) return namespace;
+
+        return XMLNamespace.html;
     }
 
     createDOM(document = globalThis.document) {
@@ -61,11 +65,9 @@ export class VNode extends VNodeMeta {
             ? document.createTextNode(text)
             : !tagName
               ? document.createDocumentFragment()
-              : document.createElementNS(
-                    (this.namespace ||= XMLNamespace[tagName] || this.findNamespace()),
-                    tagName,
-                    { is }
-                ));
+              : document.createElementNS((this.namespace ||= this.namespaceOf(tagName)), tagName, {
+                    is
+                }));
     }
 
     toJSON(): VNodeMeta {

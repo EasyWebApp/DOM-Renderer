@@ -183,7 +183,7 @@ export class DOMRenderer {
         return newVNode;
     }
 
-    render(vNode: VNode, node: ParentNode = this.document.body) {
+    render(vNode: VNode, node: ParentNode = globalThis.document?.body) {
         this.document = node.ownerDocument;
 
         var root = this.treeCache.get(node) || VNode.fromDOM(node);
