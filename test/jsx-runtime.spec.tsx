@@ -17,12 +17,12 @@ describe('JSX runtime', () => {
 
     it('should render JSX to DOM', () => {
         renderer.render(
-            <a href="https://idea2.app/" style={{ color: 'red' }}>
+            <a href="https://idea2.app/" style={{ fontSize: '2rem', '--color': 'red' }}>
                 idea2app
             </a>
         );
         expect(document.body.innerHTML).toBe(
-            '<a href="https://idea2.app/" style="color: red;">idea2app</a>'
+            '<a href="https://idea2.app/" style="font-size: 2rem; --color: red;">idea2app</a>'
         );
     });
 

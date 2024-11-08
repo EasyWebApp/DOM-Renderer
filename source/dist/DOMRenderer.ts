@@ -170,8 +170,8 @@ export class DOMRenderer {
             (oldVNode.node as HTMLElement).style,
             oldVNode.style,
             newVNode.style,
-            (node, key) => node.removeProperty(key),
-            (node, key, value) => node.setProperty(key, value)
+            (node, key) => node.removeProperty(toHyphenCase(key)),
+            (node, key, value) => node.setProperty(toHyphenCase(key), value)
         );
         this.updateChildren(
             oldVNode.node as ParentNode,
