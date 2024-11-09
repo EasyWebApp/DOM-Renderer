@@ -122,7 +122,7 @@ export class DOMRenderer {
         for (const { ref, node } of newList) ref?.(node);
     }
 
-    handleCustomEvent(node: EventTarget, event: string) {
+    protected handleCustomEvent(node: EventTarget, event: string) {
         var handler: EventListener;
 
         Object.defineProperty(node, `on${event}`, {
@@ -176,7 +176,7 @@ export class DOMRenderer {
         this.updateChildren(
             oldVNode.node as ParentNode,
             oldVNode.children || [],
-            newVNode.children || []
+            (newVNode.children = newVNode.children?.map(vNode => new VNode(vNode)) || [])
         );
         newVNode.node = oldVNode.node;
 

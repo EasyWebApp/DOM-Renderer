@@ -144,15 +144,25 @@ describe('JSX runtime', () => {
     });
 
     it('should not share a real DOM with the same VDOM', () => {
-        const sameVDOM = <a />;
+        const oldVDOM = <a>old</a>;
 
         renderer.render(
             <>
-                <nav>{sameVDOM}</nav>
-                <nav>{sameVDOM}</nav>
+                <nav>{oldVDOM}</nav>
+                <nav>{oldVDOM}</nav>
             </>
         );
-        expect(document.body.innerHTML).toBe('<nav><a></a></nav><nav><a></a></nav>');
+        expect(document.body.innerHTML).toBe('<nav><a>old</a></nav><nav><a>old</a></nav>');
+
+        const newVDOM = <a>new</a>;
+
+        renderer.render(
+            <>
+                <nav>{newVDOM}</nav>
+                <nav>{newVDOM}</nav>
+            </>
+        );
+        expect(document.body.innerHTML).toBe('<nav><a>new</a></nav><nav><a>new</a></nav>');
     });
 
     it('should handle Nested children arrays', () => {
