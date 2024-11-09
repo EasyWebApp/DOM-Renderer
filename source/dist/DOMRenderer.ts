@@ -61,8 +61,6 @@ export class DOMRenderer {
             reusedVNode || new VNode({ tagName: vNode.tagName, node: vNode.node }),
             vNode
         );
-        if (node) vNode.ref?.(node);
-
         return node;
     }
 
@@ -120,6 +118,8 @@ export class DOMRenderer {
             for (const vNode of deletingGroup[selector]) this.deleteNode(vNode);
 
         this.commitChildren(node, newNodes as ChildNode[]);
+
+        for (const { ref, node } of newList) ref?.(node);
     }
 
     handleCustomEvent(node: EventTarget, event: string) {
