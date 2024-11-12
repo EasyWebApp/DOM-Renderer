@@ -12,6 +12,12 @@ import {
 
 import { DataObject, VNode } from './VDOM';
 
+export interface UpdateTask {
+    index?: number;
+    oldVNode?: VNode;
+    newVNode?: VNode;
+}
+
 export class DOMRenderer {
     eventPattern = /^on[A-Z]/;
     ariaPattern = /^aira[A-Z]/;
@@ -50,20 +56,6 @@ export class DOMRenderer {
                 else Reflect.set(node, key, newProps[key]);
     }
 
-    protected createNode(vNode: VNode, reusedVNodes?: Record<string, VNode[]>) {
-        if (vNode.text) return vNode.createDOM(this.document);
-
-        const reusedVNode = vNode.selector && reusedVNodes?.[vNode.selector]?.shift();
-
-        vNode.node = reusedVNode?.node || vNode.createDOM(this.document);
-
-        const { node } = this.patch(
-            reusedVNode || new VNode({ tagName: vNode.tagName, node: vNode.node }),
-            vNode
-        );
-        return node;
-    }
-
     protected deleteNode({ ref, node, children }: VNode) {
         if (node instanceof DocumentFragment) children?.forEach(this.deleteNode);
         else if (node) {
@@ -73,53 +65,54 @@ export class DOMRenderer {
         }
     }
 
-    protected commitChildren(root: ParentNode, newNodes: ChildNode[]) {
-        for (const oldNode of [...root.childNodes]) {
-            const index = newNodes.indexOf(oldNode);
+    protected commitChild(root: ParentNode, node: Node, index = 0) {
+        const targetNode = root.childNodes[index];
 
-            if (index < 0) continue;
-            else if (index === 0) {
-                newNodes.shift();
-                continue;
-            }
-            const beforeNodes = newNodes.slice(0, index);
+        if (targetNode === node) return;
 
-            if (!beforeNodes[0]) continue;
-
-            oldNode.before(...beforeNodes);
-
-            newNodes = newNodes.slice(index + 1);
-        }
-
-        if (newNodes[0]) root.append(...newNodes);
+        if (!targetNode) root.append(node);
+        else targetNode.before(node);
     }
 
-    protected updateChildren(node: ParentNode, oldList: VNode[], newList: VNode[]) {
-        const { map, group } = diffKeys(oldList.map(this.keyOf), newList.map(this.keyOf));
+    protected *diffVChildren(oldVNode: VNode, newVNode: VNode): Generator<UpdateTask> {
+        newVNode.children = newVNode.children.map(vNode => new VNode(vNode));
+
+        const { map, group } = diffKeys(
+            oldVNode.children!.map(this.keyOf),
+            newVNode.children!.map(this.keyOf)
+        );
         const deletingGroup =
             group[DiffStatus.Old] &&
             groupBy(
-                group[DiffStatus.Old].map(([key]) => this.vNodeOf(oldList, key)),
+                group[DiffStatus.Old].map(([key]) => this.vNodeOf(oldVNode.children!, key)),
                 ({ selector }) => selector + ''
             );
-        const newNodes = newList.map((vNode, index) => {
-            const key = this.keyOf(vNode, index);
+        const updatingQueue: UpdateTask[] = [];
 
-            if (map[key] !== DiffStatus.Same) return this.createNode(vNode, deletingGroup);
+        for (const [index, newVChild] of newVNode.children!.entries()) {
+            const key = this.keyOf(newVChild, index);
 
-            const oldVNode = this.vNodeOf(oldList, key)!;
+            const oldVChild =
+                map[key] == DiffStatus.Same
+                    ? this.vNodeOf(oldVNode.children!, key)
+                    : deletingGroup?.[newVChild.selector]?.shift();
 
-            return vNode.text != null
-                ? (vNode.node = oldVNode.node)
-                : this.patch(oldVNode, vNode).node;
-        });
+            const task = { index, oldVNode: oldVChild, newVNode: newVChild };
+
+            updatingQueue.push(task);
+
+            yield task;
+        }
 
         for (const selector in deletingGroup)
-            for (const vNode of deletingGroup[selector]) this.deleteNode(vNode);
+            for (const oldVNode of deletingGroup[selector]) yield { oldVNode };
 
-        this.commitChildren(node, newNodes as ChildNode[]);
+        for (let { oldVNode, newVNode } of updatingQueue)
+            if (oldVNode?.children[0] || newVNode.children[0]) {
+                oldVNode ||= new VNode({ ...newVNode, children: [] });
 
-        for (const { ref, node } of newList) ref?.(node);
+                yield* this.diffVChildren(oldVNode, newVNode);
+            }
     }
 
     protected handleCustomEvent(node: EventTarget, event: string) {
@@ -158,7 +151,7 @@ export class DOMRenderer {
             }
     };
 
-    patch(oldVNode: VNode, newVNode: VNode): VNode {
+    protected updateVNode(oldVNode: VNode, newVNode: VNode) {
         this.updateProps(
             oldVNode.node as Element,
             oldVNode.props,
@@ -170,17 +163,37 @@ export class DOMRenderer {
             (oldVNode.node as HTMLElement).style,
             oldVNode.style,
             newVNode.style,
-            (node, key) => node.removeProperty(toHyphenCase(key)),
-            (node, key, value) => node.setProperty(toHyphenCase(key), value)
+            (style, key) => style.removeProperty(toHyphenCase(key)),
+            (style, key, value) => style.setProperty(toHyphenCase(key), value)
         );
-        this.updateChildren(
-            oldVNode.node as ParentNode,
-            oldVNode.children || [],
-            (newVNode.children = newVNode.children?.map(vNode => new VNode(vNode)) || [])
-        );
-        newVNode.node = oldVNode.node;
+    }
 
-        return newVNode;
+    patch(oldVRoot: VNode, newVRoot: VNode) {
+        this.updateVNode(oldVRoot, newVRoot);
+
+        for (let { index, oldVNode, newVNode } of this.diffVChildren(oldVRoot, newVRoot)) {
+            if (!newVNode) {
+                this.deleteNode(oldVNode);
+                continue;
+            }
+            const inserting = !oldVNode;
+
+            if (oldVNode) newVNode.node = oldVNode.node;
+            else {
+                newVNode.createDOM(this.document);
+                oldVNode = new VNode({ tagName: newVNode.tagName, node: newVNode.node });
+            }
+
+            if (newVNode.text) oldVNode.node.nodeValue = newVNode.text;
+            else if (!VNode.isFragment(newVNode)) this.updateVNode(oldVNode, newVNode);
+
+            if (newVNode.parent) {
+                this.commitChild(newVNode.parent.node as ParentNode, newVNode.node, index);
+
+                if (inserting) newVNode.ref?.(newVNode.node);
+            }
+        }
+        return newVRoot;
     }
 
     render(vNode: VNode, node: ParentNode = globalThis.document?.body) {

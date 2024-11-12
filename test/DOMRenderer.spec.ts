@@ -121,7 +121,7 @@ describe('DOM Renderer', () => {
 
         const shadowVDOM = renderer.patch(
             VNode.fromDOM(shadowRoot),
-            new VNode({ children: [new VNode({ tagName: 'a' })] })
+            new VNode({ node: shadowRoot, children: [new VNode({ tagName: 'a' })] })
         );
         expect(VNode.isFragment(shadowVDOM)).toBe(true);
 
