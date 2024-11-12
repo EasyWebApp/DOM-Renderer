@@ -176,7 +176,7 @@ describe('JSX runtime', () => {
     });
 
     it('should render to a Static String', () => {
-        expect(renderer.renderToStaticMarkup(<i />)).toBe('<i></i>');
+        expect(renderer.renderToStaticMarkup(<i />)).toBe('<i />');
     });
 
     it('should render SVG', () => {

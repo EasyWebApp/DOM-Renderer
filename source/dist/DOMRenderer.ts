@@ -208,27 +208,56 @@ export class DOMRenderer {
         return root;
     }
 
-    protected buildRenderTree(tree: VNode) {
-        const { body } = this.document.implementation.createHTMLDocument();
+    *generateHTML(vNode: VNode): Generator<string> {
+        if (VNode.isFragment(vNode)) {
+            yield '<template';
 
-        this.render(tree, body);
+            const { mode } = (vNode.node || {}) as ShadowRoot;
 
-        const shadowRoots = [...findShadowRoots(body)];
+            if (mode) yield ` shadowrootmode="${mode}"`;
 
-        return { body, shadowRoots };
+            yield '>';
+        } else if (vNode.text != null) yield vNode.text;
+        else {
+            const { tagName, props, style, children } = vNode;
+
+            if (tagName.includes('-') && elementTypeOf(tagName) === 'html') {
+                const { body } = this.document.implementation.createHTMLDocument();
+
+                body.innerHTML = `<${tagName}></${tagName}>`;
+
+                const shadowRoots = [...findShadowRoots(body)];
+
+                yield body.getHTML({ serializableShadowRoots: true, shadowRoots });
+            } else {
+                yield `<${tagName}`;
+
+                for (const key in props) yield ` ${key}="${props[key]}"`;
+
+                if (style) {
+                    yield ` style="`;
+
+                    for (const key in style) yield `${toHyphenCase(key)}:${style[key]};`;
+
+                    yield `"`;
+                }
+                if (!children[0]) yield ` />`;
+                else {
+                    yield '>';
+
+                    for (const child of children) yield* this.generateHTML(child);
+
+                    yield `</${tagName}>`;
+                }
+            }
+        }
     }
 
     renderToStaticMarkup(tree: VNode) {
-        const { body, shadowRoots } = this.buildRenderTree(tree);
-
-        return body.getHTML({ serializableShadowRoots: true, shadowRoots });
+        return [...this.generateHTML(tree)].join('');
     }
 
     renderToReadableStream(tree: VNode) {
-        const { body, shadowRoots } = this.buildRenderTree(tree);
-
-        return ReadableStream.from(
-            generateHTML(body, { serializableShadowRoots: true, shadowRoots })
-        );
+        return ReadableStream.from(this.generateHTML(tree));
     }
 }
