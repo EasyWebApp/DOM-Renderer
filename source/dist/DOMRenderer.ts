@@ -1,4 +1,4 @@
-import { findShadowRoots, generateHTML } from 'declarative-shadow-dom-polyfill';
+import { findShadowRoots } from 'declarative-shadow-dom-polyfill';
 import { ReadableStream } from 'web-streams-polyfill';
 import {
     diffKeys,
@@ -87,32 +87,25 @@ export class DOMRenderer {
                 group[DiffStatus.Old].map(([key]) => this.vNodeOf(oldVNode.children!, key)),
                 ({ selector }) => selector + ''
             );
-        const updatingQueue: UpdateTask[] = [];
 
         for (const [index, newVChild] of newVNode.children!.entries()) {
             const key = this.keyOf(newVChild, index);
 
-            const oldVChild =
+            let oldVChild =
                 map[key] == DiffStatus.Same
                     ? this.vNodeOf(oldVNode.children!, key)
                     : deletingGroup?.[newVChild.selector]?.shift();
 
-            const task = { index, oldVNode: oldVChild, newVNode: newVChild };
+            yield { index, oldVNode: oldVChild, newVNode: newVChild };
 
-            updatingQueue.push(task);
+            if (oldVChild?.children[0] || newVChild.children[0]) {
+                oldVChild ||= new VNode({ ...newVChild, children: [] });
 
-            yield task;
+                yield* this.diffVChildren(oldVChild, newVChild);
+            }
         }
-
         for (const selector in deletingGroup)
             for (const oldVNode of deletingGroup[selector]) yield { oldVNode };
-
-        for (let { oldVNode, newVNode } of updatingQueue)
-            if (oldVNode?.children[0] || newVNode.children[0]) {
-                oldVNode ||= new VNode({ ...newVNode, children: [] });
-
-                yield* this.diffVChildren(oldVNode, newVNode);
-            }
     }
 
     protected handleCustomEvent(node: EventTarget, event: string) {
@@ -151,7 +144,7 @@ export class DOMRenderer {
             }
     };
 
-    protected updateVNode(oldVNode: VNode, newVNode: VNode) {
+    protected patchNode(oldVNode: VNode, newVNode: VNode) {
         this.updateProps(
             oldVNode.node as Element,
             oldVNode.props,
@@ -166,10 +159,14 @@ export class DOMRenderer {
             (style, key) => style.removeProperty(toHyphenCase(key)),
             (style, key, value) => style.setProperty(toHyphenCase(key), value)
         );
+        newVNode.node ||= oldVNode.node;
     }
 
     patch(oldVRoot: VNode, newVRoot: VNode) {
-        this.updateVNode(oldVRoot, newVRoot);
+        if (VNode.isFragment(newVRoot))
+            newVRoot = new VNode({ ...oldVRoot, children: newVRoot.children });
+
+        this.patchNode(oldVRoot, newVRoot);
 
         for (let { index, oldVNode, newVNode } of this.diffVChildren(oldVRoot, newVRoot)) {
             if (!newVNode) {
@@ -181,14 +178,17 @@ export class DOMRenderer {
             if (oldVNode) newVNode.node = oldVNode.node;
             else {
                 newVNode.createDOM(this.document);
-                oldVNode = new VNode({ tagName: newVNode.tagName, node: newVNode.node });
+
+                const { tagName, node, parent } = newVNode;
+
+                oldVNode = new VNode({ tagName, node, parent });
             }
 
             if (newVNode.text) oldVNode.node.nodeValue = newVNode.text;
-            else if (!VNode.isFragment(newVNode)) this.updateVNode(oldVNode, newVNode);
+            else if (!VNode.isFragment(newVNode)) this.patchNode(oldVNode, newVNode);
 
-            if (newVNode.parent) {
-                this.commitChild(newVNode.parent.node as ParentNode, newVNode.node, index);
+            if (oldVNode.parent) {
+                this.commitChild(oldVNode.parent.node as ParentNode, newVNode.node, index);
 
                 if (inserting) newVNode.ref?.(newVNode.node);
             }
