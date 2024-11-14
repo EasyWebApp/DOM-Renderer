@@ -1,4 +1,14 @@
-import { HTMLProps, IndexKey, isEmpty, MathMLProps, SVGProps, XMLNamespace } from 'web-utility';
+import { findShadowRoots } from 'declarative-shadow-dom-polyfill';
+import {
+    elementTypeOf,
+    HTMLProps,
+    IndexKey,
+    isEmpty,
+    MathMLProps,
+    SVGProps,
+    toHyphenCase,
+    XMLNamespace
+} from 'web-utility';
 
 export type DataObject = Record<string, any>;
 
@@ -76,6 +86,64 @@ export class VNode extends VNodeMeta {
         return JSON.parse(
             JSON.stringify({ key, text, selector, namespace, tagName, is, props, style, children })
         );
+    }
+
+    protected *generateElementXML(): Generator<string> {
+        const { tagName, props, style, children, node } = this;
+
+        if (tagName.includes('-') && elementTypeOf(tagName) === 'html') {
+            const { body } = (node?.ownerDocument || document).implementation.createHTMLDocument();
+
+            body.innerHTML = `<${tagName}></${tagName}>`;
+
+            const shadowRoots = [...findShadowRoots(body)];
+
+            yield body.getHTML({ serializableShadowRoots: true, shadowRoots });
+        } else {
+            const { innerHTML, ...restProps } = props;
+
+            yield `<${tagName}`;
+
+            for (const key in restProps) {
+                yield ` ${VNode.propsMap[key] || key}="${restProps[key]}"`;
+            }
+            if (style) {
+                yield ` style="`;
+
+                for (const key in style) {
+                    yield `${toHyphenCase(key)}:${style[key]};`;
+                }
+                yield `"`;
+            }
+            if (innerHTML) {
+                yield `>${innerHTML}</${tagName}>`;
+            } else if (children[0]) {
+                yield '>';
+
+                for (const child of children) {
+                    yield* child.generateXML();
+                }
+                yield `</${tagName}>`;
+            } else {
+                yield ` />`;
+            }
+        }
+    }
+
+    *generateXML(this: VNode): Generator<string> {
+        if (VNode.isFragment(this)) {
+            yield '<template';
+
+            const { mode } = (this.node || {}) as ShadowRoot;
+
+            if (mode) yield ` shadowrootmode="${mode}"`;
+
+            yield '>';
+        } else if (this.text != null) {
+            yield this.text;
+        } else {
+            yield* this.generateElementXML();
+        }
     }
 
     static propsMap: Partial<Record<keyof HTMLProps<HTMLLabelElement>, string>> = {

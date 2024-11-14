@@ -1,4 +1,3 @@
-import { findShadowRoots } from 'declarative-shadow-dom-polyfill';
 import { ReadableStream } from 'web-streams-polyfill';
 import {
     diffKeys,
@@ -38,6 +37,7 @@ export class DOMRenderer {
             : this.eventPattern.test(key)
               ? key.toLowerCase()
               : key;
+    protected attrsNameOf = (key: string) => VNode.propsMap[key] || key;
 
     protected updateProps<N extends DataObject, P extends DataObject>(
         node: N,
@@ -92,7 +92,7 @@ export class DOMRenderer {
             const key = this.keyOf(newVChild, index);
 
             let oldVChild =
-                map[key] == DiffStatus.Same
+                map[key] === DiffStatus.Same
                     ? this.vNodeOf(oldVNode.children!, key)
                     : deletingGroup?.[newVChild.selector]?.shift();
 
@@ -125,12 +125,12 @@ export class DOMRenderer {
         this.eventPattern.test(key)
             ? (node[key.toLowerCase()] = null)
             : node.removeAttribute(
-                  this.ariaPattern.test(key) ? toHyphenCase(key) : VNode.propsMap[key] || key
+                  this.ariaPattern.test(key) ? toHyphenCase(key) : this.attrsNameOf(key)
               );
     protected setProperty = (node: Element, key: string, value: string) => {
         const isXML = templateOf(node.tagName) && elementTypeOf(node.tagName) === 'xml';
 
-        if (isXML || key.includes('-')) node.setAttribute(key, value);
+        if (isXML || key.includes('-')) node.setAttribute(this.attrsNameOf(key), value);
         else
             try {
                 const name = this.propsKeyOf(key);
@@ -140,7 +140,7 @@ export class DOMRenderer {
 
                 node[name] = value;
             } catch {
-                node.setAttribute(key, value);
+                node.setAttribute(this.attrsNameOf(key), value);
             }
     };
 
@@ -208,56 +208,11 @@ export class DOMRenderer {
         return root;
     }
 
-    *generateHTML(vNode: VNode): Generator<string> {
-        if (VNode.isFragment(vNode)) {
-            yield '<template';
-
-            const { mode } = (vNode.node || {}) as ShadowRoot;
-
-            if (mode) yield ` shadowrootmode="${mode}"`;
-
-            yield '>';
-        } else if (vNode.text != null) yield vNode.text;
-        else {
-            const { tagName, props, style, children } = vNode;
-
-            if (tagName.includes('-') && elementTypeOf(tagName) === 'html') {
-                const { body } = this.document.implementation.createHTMLDocument();
-
-                body.innerHTML = `<${tagName}></${tagName}>`;
-
-                const shadowRoots = [...findShadowRoots(body)];
-
-                yield body.getHTML({ serializableShadowRoots: true, shadowRoots });
-            } else {
-                yield `<${tagName}`;
-
-                for (const key in props) yield ` ${key}="${props[key]}"`;
-
-                if (style) {
-                    yield ` style="`;
-
-                    for (const key in style) yield `${toHyphenCase(key)}:${style[key]};`;
-
-                    yield `"`;
-                }
-                if (!children[0]) yield ` />`;
-                else {
-                    yield '>';
-
-                    for (const child of children) yield* this.generateHTML(child);
-
-                    yield `</${tagName}>`;
-                }
-            }
-        }
-    }
-
     renderToStaticMarkup(tree: VNode) {
-        return [...this.generateHTML(tree)].join('');
+        return [...tree.generateXML()].join('');
     }
 
     renderToReadableStream(tree: VNode) {
-        return ReadableStream.from(this.generateHTML(tree));
+        return ReadableStream.from(tree.generateXML());
     }
 }
