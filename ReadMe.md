@@ -9,6 +9,11 @@ A light-weight DOM Renderer supports [Web components][1] standard & [TypeScript]
 
 [![Open in GitPod](https://gitpod.io/button/open-in-gitpod.svg)][6]
 
+## Feature
+
+-   input: **Virtual DOM** object in **JSX** syntax
+-   output: **DOM** object or **XML** string of **HTML**, **SVG** & **MathML** languages
+
 ## Usage
 
 ### JavaScript
