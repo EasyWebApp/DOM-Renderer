@@ -1,3 +1,4 @@
+import 'scheduler-polyfill';
 import { ReadableStream } from 'web-streams-polyfill';
 import {
     diffKeys,
@@ -10,6 +11,8 @@ import {
 } from 'web-utility';
 
 import { DataObject, VNode } from './VDOM';
+
+export type RenderMode = 'sync' | 'async';
 
 export interface UpdateTask {
     index?: number;
@@ -160,13 +163,15 @@ export class DOMRenderer {
             (style, key, value) => style.setProperty(toHyphenCase(key), value)
         );
         newVNode.node ||= oldVNode.node;
+
+        return newVNode;
     }
 
-    patch(oldVRoot: VNode, newVRoot: VNode) {
+    *generateDOM(oldVRoot: VNode, newVRoot: VNode) {
         if (VNode.isFragment(newVRoot))
             newVRoot = new VNode({ ...oldVRoot, children: newVRoot.children });
 
-        this.patchNode(oldVRoot, newVRoot);
+        yield this.patchNode(oldVRoot, newVRoot);
 
         for (let { index, oldVNode, newVNode } of this.diffVChildren(oldVRoot, newVRoot)) {
             if (!newVNode) {
@@ -192,20 +197,46 @@ export class DOMRenderer {
 
                 if (inserting) newVNode.ref?.(newVNode.node);
             }
+            yield newVNode;
+        }
+    }
+
+    patch(oldVRoot: VNode, newVRoot: VNode) {
+        var count = 0;
+
+        for (const newVNode of this.generateDOM(oldVRoot, newVRoot))
+            if (++count === 1) newVRoot = newVNode;
+
+        return newVRoot;
+    }
+
+    async patchAsync(oldVRoot: VNode, newVRoot: VNode) {
+        var count = 0;
+
+        for (const newVNode of this.generateDOM(oldVRoot, newVRoot)) {
+            if (++count === 1) newVRoot = newVNode;
+
+            await scheduler.yield();
         }
         return newVRoot;
     }
 
-    render(vNode: VNode, node: ParentNode = globalThis.document?.body) {
+    render(vNode: VNode, node?: ParentNode, mode?: 'sync'): VNode;
+    render(vNode: VNode, node?: ParentNode, mode?: 'async'): Promise<VNode>;
+    render(
+        vNode: VNode,
+        node: ParentNode = globalThis.document?.body,
+        mode: RenderMode = 'sync'
+    ): VNode | Promise<VNode> {
         this.document = node.ownerDocument;
 
         var root = this.treeCache.get(node) || VNode.fromDOM(node);
 
-        root = this.patch(root, new VNode({ ...root, children: [vNode] }));
+        const done = (root: VNode) => this.treeCache.set(node, root) && root;
 
-        this.treeCache.set(node, root);
-
-        return root;
+        return mode === 'sync'
+            ? done(this.patch(root, new VNode({ ...root, children: [vNode] })))
+            : this.patchAsync(root, new VNode({ ...root, children: [vNode] })).then(done);
     }
 
     renderToStaticMarkup(tree: VNode) {

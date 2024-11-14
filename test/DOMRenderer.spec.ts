@@ -1,5 +1,3 @@
-import 'declarative-shadow-dom-polyfill';
-
 import { DOMRenderer, VNode } from '../source/dist';
 
 globalThis.CDATASection = class extends Text {};
@@ -128,6 +126,16 @@ describe('DOM Renderer', () => {
         expect(shadowRoot.innerHTML).toBe('<a></a>');
     });
 
+    it('should render a Virtual DOM node in Async mode', async () => {
+        const promise = renderer.render(new VNode({ tagName: 'a' }), document.body, 'async');
+
+        expect(document.body.innerHTML).not.toBe('<a></a>');
+
+        await promise;
+
+        expect(document.body.innerHTML).toBe('<a></a>');
+    });
+
     class ShadowRootTag extends HTMLElement {
         constructor() {
             super();
@@ -138,6 +146,7 @@ describe('DOM Renderer', () => {
 
     it('should render the Shadow Root to HTML strings', () => {
         const markup = renderer.renderToStaticMarkup(new VNode({ tagName: 'shadow-root-tag' }));
+
         expect(markup).toBe(
             `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
         );
