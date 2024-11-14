@@ -125,7 +125,7 @@ export class VNode extends VNodeMeta {
                 }
                 yield `</${tagName}>`;
             } else {
-                yield ` />`;
+                yield tagName === 'script' ? '></script>' : ' />';
             }
         }
     }
