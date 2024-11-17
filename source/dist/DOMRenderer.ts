@@ -27,6 +27,7 @@ export class DOMRenderer {
     document = globalThis.document;
 
     protected treeCache = new WeakMap<Node, VNode>();
+    protected signalCache = new WeakMap<Node, AbortController>();
 
     protected keyOf = ({ key, text, props, selector }: VNode, index?: number) =>
         key?.toString() || props?.id || (text || selector || '') + index;
@@ -211,13 +212,32 @@ export class DOMRenderer {
     }
 
     async patchAsync(oldVRoot: VNode, newVRoot: VNode) {
+        const oldController = this.signalCache.get(oldVRoot.node);
+
+        if (oldController) {
+            oldController.abort();
+
+            oldVRoot = VNode.fromDOM(oldVRoot.node);
+        }
+        const controller = new AbortController();
+
+        this.signalCache.set(oldVRoot.node, controller);
+
         var count = 0;
 
         for (const newVNode of this.generateDOM(oldVRoot, newVRoot)) {
             if (++count === 1) newVRoot = newVNode;
 
             await scheduler.yield();
+
+            if (controller.signal.aborted) {
+                this.signalCache.delete(oldVRoot.node);
+
+                controller.signal.throwIfAborted();
+            }
         }
+        this.signalCache.delete(oldVRoot.node);
+
         return newVRoot;
     }
 
