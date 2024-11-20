@@ -19,6 +19,8 @@ A light-weight DOM Renderer supports [Web components][1] standard & [TypeScript]
 
 ### JavaScript
 
+#### Sync Rendering
+
 ```js
 import { DOMRenderer, VNode } from 'dom-renderer';
 
@@ -42,6 +44,33 @@ const newVNode = new DOMRenderer().patch(
 console.log(newVNode);
 ```
 
+#### Async Rendering (experimental)
+
+```diff
+import { DOMRenderer, VNode } from 'dom-renderer';
+
+-const newVNode = new DOMRenderer().patch(
++const newVNode = new DOMRenderer().patchAsync(
+    new VNode({
+        tagName: 'body',
+        node: document.body
+    }),
+    new VNode({
+        tagName: 'body',
+        children: [
+            new VNode({
+                tagName: 'a',
+                props: { href: 'https://idea2.app/' },
+                style: { color: 'red' },
+                children: [new VNode({ text: 'idea2app' })]
+            })
+        ]
+    })
+);
+-console.log(newVNode);
++newVNode.then(console.log);
+```
+
 ### TypeScript
 
 [![Edit DOM Renderer example](https://codesandbox.io/static/img/play-codesandbox.svg)][17]
@@ -59,6 +88,8 @@ console.log(newVNode);
 
 #### `index.tsx`
 
+##### Sync Rendering
+
 ```tsx
 import { DOMRenderer } from 'dom-renderer';
 
@@ -68,6 +99,23 @@ const newVNode = new DOMRenderer().render(
     </a>
 );
 console.log(newVNode);
+```
+
+##### Async Rendering (experimental)
+
+```diff
+import { DOMRenderer } from 'dom-renderer';
+
+const newVNode = new DOMRenderer().render(
+    <a href="https://idea2.app/" style={{ color: 'red' }}>
+        idea2app
+-    </a>
++    </a>,
++    document.body,
++    'async'
+);
+-console.log(newVNode);
++newVNode.then(console.log);
 ```
 
 ### Node.js & Bun
