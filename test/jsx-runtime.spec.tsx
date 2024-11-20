@@ -1,5 +1,3 @@
-import 'declarative-shadow-dom-polyfill';
-
 import { DOMRenderer } from '../source/dist';
 
 class MyTag extends HTMLElement {}

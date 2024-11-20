@@ -1,5 +1,3 @@
-import 'declarative-shadow-dom-polyfill';
-
 import { DOMRenderer, VNode } from '../source/dist';
 
 globalThis.CDATASection = class extends Text {};
@@ -128,6 +126,46 @@ describe('DOM Renderer', () => {
         expect(shadowRoot.innerHTML).toBe('<a></a>');
     });
 
+    it('should render a Virtual DOM node in Async mode', async () => {
+        const promise = renderer.render(new VNode({ tagName: 'a' }), document.body, 'async');
+
+        expect(document.body.innerHTML).not.toBe('<a></a>');
+
+        await promise;
+
+        expect(document.body.innerHTML).toBe('<a></a>');
+    });
+
+    it('should stop unfinished Async Rendering while new Async Rendering is started', async () => {
+        const oldTree = await renderer.render(new VNode({ tagName: 'a' }), document.body, 'async');
+
+        expect(document.body.outerHTML).toBe('<body><a></a></body>');
+
+        const promise1 = renderer.patchAsync(
+            oldTree,
+            new VNode({
+                ...root,
+                props: { className: 'dark' },
+                children: [new VNode({ tagName: 'a', props: { href: '/about' } })]
+            })
+        );
+        expect(document.body.outerHTML).toBe('<body class="dark"><a></a></body>');
+
+        const promise2 = renderer.patchAsync(
+            oldTree,
+            new VNode({
+                ...root,
+                props: { className: 'light' },
+                children: [new VNode({ tagName: 'b' })]
+            })
+        );
+        expect(promise1).rejects.toThrow('aborted');
+
+        await promise2;
+
+        expect(document.body.outerHTML).toBe('<body class="light"><b></b></body>');
+    });
+
     class ShadowRootTag extends HTMLElement {
         constructor() {
             super();
@@ -138,6 +176,7 @@ describe('DOM Renderer', () => {
 
     it('should render the Shadow Root to HTML strings', () => {
         const markup = renderer.renderToStaticMarkup(new VNode({ tagName: 'shadow-root-tag' }));
+
         expect(markup).toBe(
             `<shadow-root-tag><template shadowrootmode="closed"><a></a></template></shadow-root-tag>`
         );

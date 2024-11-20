@@ -11,6 +11,9 @@ importers:
       declarative-shadow-dom-polyfill:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.6.3)
+      scheduler-polyfill:
+        specifier: ^1.3.0
+        version: 1.3.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -34,8 +37,8 @@ importers:
         specifier: ^14.12.3
         version: 14.12.3
       husky:
-        specifier: ^9.1.6
-        version: 9.1.6
+        specifier: ^9.1.7
+        version: 9.1.7
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.17.6)
@@ -55,8 +58,8 @@ importers:
         specifier: ^0.26.11
         version: 0.26.11(typescript@5.6.3)
       typedoc-plugin-mdn-links:
-        specifier: ^3.3.7
-        version: 3.3.7(typedoc@0.26.11(typescript@5.6.3))
+        specifier: ^3.3.8
+        version: 3.3.8(typedoc@0.26.11(typescript@5.6.3))
       typescript:
         specifier: ~5.6.3
         version: 5.6.3
@@ -821,8 +824,8 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
-  husky@9.1.6:
-    resolution: {integrity: sha512-sqbjZKK7kf44hfdE94EoX8MZNk0n7HeW37O4YrVGCF4wzgQjp+akPAkfUK5LZ6KuR/6sqeAVuXHji+RzQgOn5A==}
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1376,6 +1379,9 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
+  scheduler-polyfill@1.3.0:
+    resolution: {integrity: sha512-bIjhi/KJqo08wrq+K2rlB6HNPh871KgREPpVti4zv0mSY1dCi3qr0rRCw+SGHc8/gtKceev29sN//lf6KiYa/g==}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -1566,8 +1572,8 @@ packages:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
 
-  typedoc-plugin-mdn-links@3.3.7:
-    resolution: {integrity: sha512-iFSnYj3XPuc0wh0/VjU2M/sHtNv5pSEysUXrylHxgd5PqTAOZTUswJAcbB7shg+SfxMCqGaiyA0duNmnGs/LQg==}
+  typedoc-plugin-mdn-links@3.3.8:
+    resolution: {integrity: sha512-Aewg+SW7hBdffRpT6WnpRwWthoaF9irlzXDKRyvcDVekPZSFujOlh690SV6eCgqrtP7GBJmN0TVeJUq6+6rb1w==}
     peerDependencies:
       typedoc: '>= 0.23.14 || 0.24.x || 0.25.x || 0.26.x'
 
@@ -2601,7 +2607,7 @@ snapshots:
 
   human-signals@5.0.0: {}
 
-  husky@9.1.6: {}
+  husky@9.1.7: {}
 
   ieee754@1.2.1: {}
 
@@ -3315,6 +3321,8 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
+  scheduler-polyfill@1.3.0: {}
+
   semver@6.3.1: {}
 
   semver@7.6.3: {}
@@ -3483,7 +3491,7 @@ snapshots:
 
   type-fest@2.19.0: {}
 
-  typedoc-plugin-mdn-links@3.3.7(typedoc@0.26.11(typescript@5.6.3)):
+  typedoc-plugin-mdn-links@3.3.8(typedoc@0.26.11(typescript@5.6.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
