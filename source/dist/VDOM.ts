@@ -27,16 +27,18 @@ export class VNodeMeta {
     props?: DataObject;
     style?: VNodeStyle;
     parent?: VNode;
-    children?: VNode[] = [];
+    children?: JsxChildren = [];
     node?: Node;
 }
 
 export class VNode extends VNodeMeta {
+    children?: VNode[] = [];
+
     constructor({ children, ...meta }: VNodeMeta) {
         super();
         Object.assign(this, meta);
 
-        for (const vNode of children || [])
+        for (const vNode of (children as VNode[]) || [])
             this.children.push(...(VNode.isFragment(vNode) ? vNode.children || [] : [vNode]));
 
         for (const child of this.children) child.parent = this;

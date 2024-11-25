@@ -11,8 +11,7 @@ export function jsx(
     { ref, is, style, children, ...props }: DataObject,
     key?: IndexKey
 ): VNode {
-    if (typeof type === 'function' && isHTMLElementClass(type))
-        type = tagNameOf(type);
+    if (typeof type === 'function' && isHTMLElementClass(type)) type = tagNameOf(type);
 
     children = [children]
         .flat(Infinity)
@@ -45,7 +44,7 @@ export const Fragment = ({
     style,
     children,
     ...props
-}: VNode['props'] & Omit<VNode, 'props'>) =>
+}: VNode['props'] & Omit<VNodeMeta, 'props'>) =>
     new VNode({
         key,
         ref,
