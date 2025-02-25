@@ -4,6 +4,7 @@ const window = new Window();
 
 for (const key of [
     'window',
+    'self',
     'XMLSerializer',
     'DOMParser',
     'NodeFilter',

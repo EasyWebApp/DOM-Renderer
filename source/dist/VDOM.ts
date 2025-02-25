@@ -12,6 +12,10 @@ import {
 
 export type DataObject = Record<string, any>;
 
+export type PropsMap = Partial<
+    Record<keyof HTMLProps<HTMLMetaElement> | keyof HTMLProps<HTMLLabelElement>, string>
+>;
+
 export type VNodeStyle = HTMLProps<HTMLElement>['style'] & {
     [K in `--${string}`]?: string;
 };
@@ -148,10 +152,7 @@ export class VNode extends VNodeMeta {
         }
     }
 
-    static propsMap: Partial<Record<keyof HTMLProps<HTMLLabelElement>, string>> = {
-        className: 'class',
-        htmlFor: 'for'
-    };
+    static propsMap: PropsMap = { httpEquiv: 'http-equiv', className: 'class', htmlFor: 'for' };
 
     static attrsMap: Record<string, keyof HTMLProps<HTMLLabelElement>> = Object.fromEntries(
         Object.entries(this.propsMap).map(item => item.reverse())
