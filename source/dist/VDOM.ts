@@ -100,9 +100,12 @@ export class VNode extends VNodeMeta {
         const { tagName, props, style, children, node } = this;
 
         if (tagName.includes('-') && elementTypeOf(tagName) === 'html') {
-            const { body } = (node?.ownerDocument || document).implementation.createHTMLDocument();
+            const currentDocument = node?.ownerDocument || globalThis.document;
+            const { body } = currentDocument.implementation.createHTMLDocument();
 
             new DOMRenderer().render(this, body);
+
+            currentDocument.importNode(body, true);
 
             const shadowRoots = [...findShadowRoots(body)];
 
