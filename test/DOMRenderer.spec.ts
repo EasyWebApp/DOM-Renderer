@@ -166,6 +166,37 @@ describe('DOM Renderer', () => {
         expect(document.body.outerHTML).toBe('<body class="light"><b></b></body>');
     });
 
+    it('should render Fragment nodes to <template /> HTML strings', () => {
+        const markup = renderer.renderToStaticMarkup(
+            new VNode({
+                children: [
+                    new VNode({ tagName: 'a', props: {}, children: [new VNode({ text: '1' })] })
+                ]
+            })
+        );
+        expect(markup).toBe('<template><a>1</a></template>');
+    });
+
+    class NonShadowRootTag extends HTMLElement {
+        set test(value: any) {
+            this.setAttribute('test', JSON.stringify(value));
+        }
+
+        get test() {
+            const value = this.getAttribute('test');
+
+            return value && JSON.parse(value);
+        }
+    }
+    customElements.define('non-shadow-root-tag', NonShadowRootTag);
+
+    it('should render Custom elements without Shadow Root but with attributes', () => {
+        const markup = renderer.renderToStaticMarkup(
+            new VNode({ tagName: 'non-shadow-root-tag', props: { test: { a: 1, b: 2 } } })
+        );
+        expect(markup).toBe(`<non-shadow-root-tag test="{"a":1,"b":2}"></non-shadow-root-tag>`);
+    });
+
     class ShadowRootTag extends HTMLElement {
         constructor() {
             super();

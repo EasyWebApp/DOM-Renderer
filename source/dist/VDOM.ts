@@ -10,6 +10,8 @@ import {
     XMLNamespace
 } from 'web-utility';
 
+import { DOMRenderer } from './DOMRenderer';
+
 export type DataObject = Record<string, any>;
 
 export type PropsMap = Partial<
@@ -100,7 +102,7 @@ export class VNode extends VNodeMeta {
         if (tagName.includes('-') && elementTypeOf(tagName) === 'html') {
             const { body } = (node?.ownerDocument || document).implementation.createHTMLDocument();
 
-            body.innerHTML = `<${tagName}></${tagName}>`;
+            new DOMRenderer().render(this, body);
 
             const shadowRoots = [...findShadowRoots(body)];
 
@@ -145,6 +147,11 @@ export class VNode extends VNodeMeta {
             if (mode) yield ` shadowrootmode="${mode}"`;
 
             yield '>';
+
+            for (const child of this.children) {
+                yield* child.generateXML();
+            }
+            yield '</template>';
         } else if (this.text != null) {
             yield this.text;
         } else {
