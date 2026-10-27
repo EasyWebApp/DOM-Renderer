@@ -2,15 +2,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Jest",
+            "name": "Debug tests",
             "type": "node",
             "request": "launch",
-            "port": 9229,
-            "runtimeArgs": [
-                "--inspect-brk",
-                "${workspaceRoot}/node_modules/jest/bin/jest.js",
-                "--runInBand"
+            "program": "${workspaceFolder}/node_modules/tsx/dist/cli.mjs",
+            "args": [
+                "--tsconfig",
+                "test/tsconfig.json",
+                "--test",
+                "--import",
+                "./test/setup.ts",
+                "test/*.spec.ts",
+                "test/*.spec.tsx"
             ],
+            "cwd": "${workspaceFolder}",
+            "autoAttachChildProcesses": true,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         }

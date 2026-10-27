@@ -1,6 +1,7 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
+        "types": ["node"],
         "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "jsx": "react-jsx",
         "jsxImportSource": "../source"

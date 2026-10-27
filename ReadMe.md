@@ -11,9 +11,9 @@ A light-weight DOM Renderer supports [Web components][1] standard & [TypeScript]
 
 ## Feature
 
--   input: [Virtual DOM][7] object in [JSX][8] syntax
--   output: [DOM][9] object or [XML][10] string of [HTML][11], [SVG][12] & [MathML][13] languages
--   run as: **Sync**, [Async][14], [Generator][15] functions & [Readable streams][16]
+- input: [Virtual DOM][7] object in [JSX][8] syntax
+- output: [DOM][9] object or [XML][10] string of [HTML][11], [SVG][12] & [MathML][13] languages
+- run as: **Sync**, [Async][14], [Generator][15] functions & [Readable streams][16]
 
 ## Usage
 
@@ -168,7 +168,7 @@ createServer((request, response) => {
 [2]: https://www.typescriptlang.org/
 [3]: https://libraries.io/npm/dom-renderer
 [4]: https://github.com/EasyWebApp/DOM-Renderer/actions/workflows/main.yml
-[5]: https://nodei.co/npm/dom-renderer/
+[5]: https://npm.im/dom-renderer/
 [6]: https://gitpod.io/?autostart=true#https://github.com/EasyWebApp/DOM-Renderer
 [7]: https://en.wikipedia.org/wiki/Virtual_DOM
 [8]: https://facebook.github.io/jsx/
