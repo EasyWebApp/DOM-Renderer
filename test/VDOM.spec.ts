@@ -1,3 +1,6 @@
+import { expect } from 'expect';
+import { describe, it } from 'node:test';
+
 import { VNode } from '../source/dist';
 
 describe('VDOM', () => {

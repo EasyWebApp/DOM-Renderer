@@ -1,3 +1,7 @@
+import { expect } from 'expect';
+import { fn } from 'jest-mock';
+import { describe, it } from 'node:test';
+
 import { DOMRenderer, VNode } from '../source/dist';
 
 globalThis.CDATASection = class extends Text {};
@@ -84,7 +88,7 @@ describe('DOM Renderer', () => {
     });
 
     it('should not invoke duplicated Connected Callbacks during updating', () => {
-        const connectHook = jest.fn();
+        const connectHook = fn();
 
         class Test extends HTMLElement {
             connectedCallback() {
@@ -159,7 +163,7 @@ describe('DOM Renderer', () => {
                 children: [new VNode({ tagName: 'b' })]
             })
         );
-        expect(promise1).rejects.toThrow('aborted');
+        await expect(promise1).rejects.toThrow('aborted');
 
         await promise2;
 
@@ -194,7 +198,9 @@ describe('DOM Renderer', () => {
         const markup = renderer.renderToStaticMarkup(
             new VNode({ tagName: 'non-shadow-root-tag', props: { test: { a: 1, b: 2 } } })
         );
-        expect(markup).toBe(`<non-shadow-root-tag test="{"a":1,"b":2}"></non-shadow-root-tag>`);
+        expect(markup).toBe(
+            '<non-shadow-root-tag test="{&quot;a&quot;:1,&quot;b&quot;:2}"></non-shadow-root-tag>'
+        );
     });
 
     class ShadowRootTag extends HTMLElement {

@@ -3,12 +3,14 @@ import { IndexKey, isEmpty, isHTMLElementClass, tagNameOf } from 'web-utility';
 import { DataObject, VNode, VNodeMeta } from './dist/VDOM';
 
 /**
+ * A defined key in props takes precedence over the separate key argument.
+ *
  * @see {@link https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md}
  * @see {@link https://babeljs.io/docs/babel-plugin-transform-react-jsx}
  */
 export function jsx(
     type: string | Function,
-    { ref, is, style, children, ...props }: DataObject,
+    { key: propsKey, ref, is, style, children, ...props }: DataObject,
     key?: IndexKey
 ): VNode {
     if (typeof type === 'function' && isHTMLElementClass(type)) type = tagNameOf(type);
@@ -24,7 +26,13 @@ export function jsx(
         )
         .filter(Boolean);
 
-    const commonProps: VNodeMeta = { key, ref, is, style, children };
+    const commonProps: VNodeMeta = {
+        key: propsKey !== undefined ? propsKey : key,
+        ref,
+        is,
+        style,
+        children
+    };
 
     return typeof type === 'string'
         ? new VNode({ ...commonProps, tagName: type, props })

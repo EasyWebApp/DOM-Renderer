@@ -1,4 +1,9 @@
-import { DOMRenderer } from '../source/dist';
+import { expect } from 'expect';
+import { fn } from 'jest-mock';
+import { describe, it } from 'node:test';
+
+import { DOMRenderer, VNodeMeta } from '../source/dist';
+import { Fragment, jsx, jsxDEV, jsxs } from '../source/jsx-runtime';
 
 class MyTag extends HTMLElement {}
 
@@ -12,6 +17,78 @@ declare global {
 
 describe('JSX runtime', () => {
     const renderer = new DOMRenderer();
+
+    for (const { name, type } of [
+        { name: 'native elements', type: 'button' },
+        { name: 'function wrappers', type: (props: VNodeMeta) => jsx('button', props) },
+        { name: 'Fragments', type: Fragment }
+    ]) 
+        describe(`key metadata for ${name}`, () => {
+            for (const { props, argumentKey, expected } of [
+                { props: { key: 'spread' }, argumentKey: undefined, expected: 'spread' },
+                { props: {}, argumentKey: 'argument', expected: 'argument' },
+                { props: { key: 'spread' }, argumentKey: 'argument', expected: 'spread' },
+                { props: { key: undefined }, argumentKey: 'argument', expected: 'argument' },
+                { props: { key: 0 }, argumentKey: 'argument', expected: 0 },
+                { props: { key: '' }, argumentKey: 'argument', expected: '' },
+                { props: {}, argumentKey: 0, expected: 0 },
+                { props: {}, argumentKey: '', expected: '' }
+            ]) {
+                it(`should resolve props key ${String(props.key)} and argument key ${String(argumentKey)} to ${JSON.stringify(expected)}`, () => {
+                    const node = jsx(type, props, argumentKey);
+
+                    expect(node.key).toBe(expected);
+                    expect(node.props || {}).not.toHaveProperty('key');
+                });
+            }
+        });
+    
+
+    it('should let a later spread override an explicit JSX key', () => {
+        const props: Pick<VNodeMeta, 'key'> = { key: 'b' };
+        const node = <button key="a" {...props} />;
+
+        expect(node.key).toBe('b');
+        expect(node.props).not.toHaveProperty('key');
+    });
+
+    for (const [name, runtime] of Object.entries({ jsx, jsxs, jsxDEV })) 
+        it(`should resolve spread keys through ${name}`, () => {
+            const node = runtime('button', { key: 0 }, 'argument');
+
+            expect(node.key).toBe(0);
+            expect(node.props).not.toHaveProperty('key');
+        });
+    
+
+    it('should preserve the DOM node and focus after a spread-keyed state update', () => {
+        const container = document.body.appendChild(document.createElement('main'));
+        const renderButton = (active: boolean) =>
+            renderer.render(
+                <button {...{ key: 'stable', className: active ? 'active' : 'inactive' }}>
+                    {active ? 'Updated' : 'Initial'}
+                </button>,
+                container
+            );
+
+        try {
+            renderButton(false);
+
+            const button = container.querySelector('button')!;
+
+            button.focus();
+            expect(document.activeElement).toBe(button);
+
+            renderButton(true);
+
+            expect(container.querySelector('button')).toBe(button);
+            expect(button.className).toBe('active');
+            expect(button.textContent).toBe('Updated');
+            expect(document.activeElement).toBe(button);
+        } finally {
+            container.remove();
+        }
+    });
 
     it('should render JSX to DOM', () => {
         renderer.render(
@@ -90,7 +167,7 @@ describe('JSX runtime', () => {
     });
 
     it('should call Event handlers', () => {
-        const onClick = jest.fn();
+        const onClick = fn();
 
         renderer.render(<i onClick={onClick} />);
 
@@ -100,7 +177,7 @@ describe('JSX runtime', () => {
     });
 
     it('should toggle a real DOM Node by callbacks', () => {
-        const ref = jest.fn();
+        const ref = fn();
 
         renderer.render(<b ref={ref} />);
 
