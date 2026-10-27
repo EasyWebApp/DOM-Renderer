@@ -148,6 +148,36 @@ createServer((request, response) => {
 }).listen(8080);
 ```
 
+### Test in JSX
+
+#### Install dependencies
+
+```sh
+npm install tsx expect -D
+```
+
+#### `test/some-test.spec.tsx`
+
+```tsx
+import { describe, it } from 'node:test';
+import { assertLooksLike } from 'dom-renderer/assert';
+
+describe('some JSX tests', () => {
+    it('should assert looks like for input elements', () => {
+        assertLooksLike(
+            <input id="name" required data-meta={{ first: 1, second: 2 }} />,
+            <input data-meta={{ first: 1 }} />
+        );
+    });
+});
+```
+
+#### Run tests
+
+```sh
+tsx --test test/*.spec.*
+```
+
 ## Framework
 
 ### Web components
