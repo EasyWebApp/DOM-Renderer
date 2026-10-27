@@ -1,6 +1,6 @@
 {
     "name": "dom-renderer",
-    "version": "2.6.5",
+    "version": "2.7.0",
     "license": "LGPL-3.0-or-later",
     "author": "shiy2008@gmail.com",
     "description": "A light-weight DOM Renderer supports Web components standard & TypeScript language",
@@ -23,6 +23,25 @@
     "source": "source/dist/index.ts",
     "types": "dist/index.d.ts",
     "main": "dist/index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./jsx-runtime": {
+            "types": "./jsx-runtime.d.ts",
+            "default": "./jsx-runtime.js"
+        },
+        "./jsx-dev-runtime": {
+            "types": "./jsx-dev-runtime.d.ts",
+            "default": "./jsx-dev-runtime.js"
+        },
+        "./assert": {
+            "types": "./assert.d.ts",
+            "default": "./assert.js"
+        },
+        "./package.json": "./package.json"
+    },
     "dependencies": {
         "declarative-shadow-dom-polyfill": "^0.4.1",
         "scheduler-polyfill": "^1.3.0",
@@ -31,7 +50,8 @@
         "web-utility": "^4.8.1"
     },
     "peerDependencies": {
-        "happy-dom": "^21.0.4"
+        "happy-dom": "^21.0.4",
+        "expect": "^30.5.2"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^21.0.4",
@@ -62,7 +82,8 @@
     "scripts": {
         "prepare": "husky",
         "test": "lint-staged  &&  tsx --tsconfig test/tsconfig.json --test --import ./test/setup.ts \"test/*.spec.ts\" \"test/*.spec.tsx\"",
-        "parcel": "tsc -p tsconfig.json  &&  mv dist/jsx-runtime.* .  &&  cp jsx-runtime.js jsx-dev-runtime.js  &&  mv dist/dist/* dist/  &&  rm -rf dist/dist",
+        "make-jsx": "mv dist/jsx-runtime.* .  &&  cp jsx-runtime.js jsx-dev-runtime.js",
+        "parcel": "tsc -p tsconfig.json  &&  npm run make-jsx  &&  mv dist/assert.* .  &&  mv dist/dist/* dist/  &&  rm -rf dist/dist",
         "build": "rm -rf dist/ docs/  &&  typedoc  &&  npm run parcel",
         "start": "typedoc  &&  open-cli docs/index.html",
         "prepublishOnly": "npm test  &&  npm run build"
